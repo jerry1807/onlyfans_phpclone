@@ -13,9 +13,7 @@
       </div>
       <div class="row">
 
-        @include('includes.cards-settings')
-
-        <div class="col-md-6 col-lg-9 mb-5 mb-lg-0">
+        <div class="col-lg-12 mb-5 mb-lg-0">
 
           <div class="content">
             <div class="row">

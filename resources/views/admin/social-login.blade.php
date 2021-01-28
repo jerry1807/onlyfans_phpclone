@@ -91,6 +91,55 @@
                        </div>
                      </div><!-- /.box-body -->
 
+                     <hr>
+
+                     <!-- Start Box Body -->
+                      <div class="box-body">
+                        <div class="form-group">
+                          <label class="col-sm-2 control-label">Twitter Client ID</label>
+                          <div class="col-sm-10">
+                            <input type="text" value="{{ env('TWITTER_CLIENT_ID') }}" name="TWITTER_CLIENT_ID" class="form-control" placeholder="">
+                          </div>
+                        </div>
+                      </div><!-- /.box-body -->
+
+                        <!-- Start Box Body -->
+                         <div class="box-body">
+                           <div class="form-group">
+                             <label class="col-sm-2 control-label">Twitter Client Secret</label>
+                             <div class="col-sm-10">
+                               <input type="password" value="{{ env('TWITTER_CLIENT_SECRET') }}" name="TWITTER_CLIENT_SECRET" class="form-control" placeholder="">
+                               <p class="help-block margin-bottom-zero">URL Callback: <strong>{{url('oauth/twitter/callback')}}</strong></p>
+                             </div>
+                           </div>
+                         </div><!-- /.box-body -->
+
+                         <!-- Start Box Body -->
+                         <div class="box-body">
+                           <div class="form-group">
+                             <label class="col-sm-2 control-label">{{ trans('admin.twitter_login') }}</label>
+                             <div class="col-sm-10">
+
+                              <div class="radio">
+                               <label class="padding-zero">
+                                 <input type="radio" name="twitter_login" @if( $settings->twitter_login == 'on' ) checked="checked" @endif value="on" checked>
+                                 On
+                               </label>
+                             </div>
+
+                             <div class="radio">
+                               <label class="padding-zero">
+                                 <input type="radio" name="twitter_login" @if( $settings->twitter_login == 'off' ) checked="checked" @endif value="off">
+                                 Off
+                               </label>
+                             </div>
+
+                             </div>
+                           </div>
+                         </div><!-- /.box-body -->
+
+                         <hr>
+
                      <!-- Start Box Body -->
                       <div class="box-body">
                         <div class="form-group">

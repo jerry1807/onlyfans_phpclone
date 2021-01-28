@@ -100,6 +100,46 @@
                   </div><!-- /.box-body -->
 
                   <!-- Start Box Body -->
+                 <div class="box-body">
+                   <div class="form-group">
+                     <label class="col-sm-2 control-label">{{ trans('general.min_tip_amount') }}</label>
+                     <div class="col-sm-10">
+                       <input type="number" min="1" autocomplete="off" value="{{ $settings->min_tip_amount }}" name="min_tip_amount" class="form-control onlyNumber" placeholder="{{ trans('general.min_tip_amount') }}">
+                     </div>
+                   </div>
+                 </div><!-- /.box-body -->
+
+                 <!-- Start Box Body -->
+                 <div class="box-body">
+                   <div class="form-group">
+                     <label class="col-sm-2 control-label">{{ trans('general.max_tip_amount') }}</label>
+                     <div class="col-sm-10">
+                       <input type="number" min="1" autocomplete="off" value="{{ $settings->max_tip_amount }}" name="max_tip_amount" class="form-control onlyNumber" placeholder="{{ trans('general.max_tip_amount') }}">
+                     </div>
+                   </div>
+                 </div><!-- /.box-body -->
+
+                 <!-- Start Box Body -->
+                 <div class="box-body">
+                   <div class="form-group">
+                     <label class="col-sm-2 control-label">{{ trans('general.min_deposits_amount') }}</label>
+                     <div class="col-sm-10">
+                       <input type="number" min="1" autocomplete="off" value="{{ $settings->min_deposits_amount }}" name="min_deposits_amount" class="form-control onlyNumber" placeholder="{{ trans('general.min_deposits_amount') }}">
+                     </div>
+                   </div>
+                 </div><!-- /.box-body -->
+
+                 <!-- Start Box Body -->
+                 <div class="box-body">
+                   <div class="form-group">
+                     <label class="col-sm-2 control-label">{{ trans('general.max_deposits_amount') }}</label>
+                     <div class="col-sm-10">
+                       <input type="number" min="1" autocomplete="off" value="{{ $settings->max_deposits_amount }}" name="max_deposits_amount" class="form-control onlyNumber" placeholder="{{ trans('general.max_deposits_amount') }}">
+                     </div>
+                   </div>
+                 </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
                   <div class="box-body">
                     <div class="form-group">
                       <label class="col-sm-2 control-label">{{ trans('general.amount_min_withdrawal') }}</label>
@@ -148,6 +188,34 @@
                     </div>
                   </div>
                 </div><!-- /.box-body -->
+
+                <!-- Start Box Body -->
+               <div class="box-body">
+                 <div class="form-group">
+                   <label class="col-sm-2 control-label">{{ trans('users.payout_method') }} (PayPal)</label>
+                   <div class="col-sm-10">
+                     <select name="payout_method_paypal" class="form-control">
+                         <option @if( $settings->payout_method_paypal == 'on' ) selected="selected" @endif value="on">{{ trans('general.enabled') }}</option>
+                           <option @if( $settings->payout_method_paypal == 'off' ) selected="selected" @endif value="off">{{ trans('general.disabled') }}</option>
+                         </select>
+                         <p class="help-block">{{ trans('general.payout_method_desc') }}</p>
+                   </div>
+                 </div>
+               </div><!-- /.box-body -->
+
+               <!-- Start Box Body -->
+              <div class="box-body">
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">{{ trans('users.payout_method') }} ({{ trans('general.bank') }})</label>
+                  <div class="col-sm-10">
+                    <select name="payout_method_bank" class="form-control">
+                        <option @if( $settings->payout_method_bank == 'on' ) selected="selected" @endif value="on">{{ trans('general.enabled') }}</option>
+                          <option @if( $settings->payout_method_bank == 'off' ) selected="selected" @endif value="off">{{ trans('general.disabled') }}</option>
+                        </select>
+                        <p class="help-block">{{ trans('general.payout_method_desc') }}</p>
+                  </div>
+                </div>
+              </div><!-- /.box-body -->
 
                <div class="box-footer">
                  <button type="submit" class="btn btn-success">{{ trans('admin.save') }}</button>

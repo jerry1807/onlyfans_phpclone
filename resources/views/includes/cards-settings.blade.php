@@ -35,10 +35,28 @@
 									<i class="fas fa-angle-right"></i>
 							</div>
 					</a>
+					<a href="{{url('settings/subscription')}}" class="list-group-item list-group-item-action d-flex justify-content-between @if(request()->is('settings/subscription')) active @endif">
+							<div>
+									<i class="fa fa-sync mr-2"></i>
+									<span>{{trans('general.subscription')}}</span>
+							</div>
+							<div>
+									<i class="fas fa-angle-right"></i>
+							</div>
+					</a>
 					<a href="{{url('messages')}}" class="list-group-item list-group-item-action d-flex justify-content-between @if(request()->is('messages') || request()->is('messages/*')) active @endif">
 							<div>
-									<i class="far fa-envelope mr-2"></i>
+									<i class="feather icon-send mr-2"></i>
 									<span>{{trans('general.messages')}}</span>
+							</div>
+							<div>
+									<i class="fas fa-angle-right"></i>
+							</div>
+					</a>
+					<a href="{{url('my/wallet')}}" class="list-group-item list-group-item-action d-flex justify-content-between @if(request()->is('my/wallet')) active @endif">
+							<div>
+									<i class="fas fa-wallet mr-2"></i>
+									<span>{{trans('general.wallet')}}</span>
 							</div>
 							<div>
 									<i class="fas fa-angle-right"></i>
@@ -46,7 +64,7 @@
 					</a>
 					<a href="{{url('settings/verify/account')}}" class="list-group-item list-group-item-action d-flex justify-content-between @if(request()->is('settings/verify/account')) active @endif">
 							<div>
-									<i class="far fa-check-circle mr-2"></i>
+									<i class="feather icon-check-circle mr-2"></i>
 									<span>{{trans('general.verify_account')}}</span>
 							</div>
 							<div>

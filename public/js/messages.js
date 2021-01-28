@@ -30,10 +30,11 @@
 	 var _lastId     = $('div.chatlist:last').attr('data');
 	 var _message    = $('#message').val();
 	 var file        = $('#file').val();
+	 var zipFile     = $('#zipFile').val();
 	 var dataWait    = '<i class="spinner-border spinner-border-sm"></i>';
 	 var dataSent    = '<i class="far fa-paper-plane"></i>';
 
-	 if (trimSpace(_message).length == 0 && file == '') {
+	 if (trimSpace(_message).length == 0 && file == '' && zipFile == '') {
 		 var error = true;
 		 return false;
 	 }
@@ -42,7 +43,7 @@
 		 $('#button-reply-msg').attr({'disabled' : 'true'}).html(dataWait);
 	   $('.blocked').show();
 
-	   if (file != '') {
+	   if (file != '' || zipFile != '') {
 	     $('.progress-upload-cover').show();
 	   }
 
@@ -61,13 +62,13 @@
 	     $('.blocked').hide();
 	    },
 	    beforeSend: function() {
-	      if (file != '') {
+	      if (file != '' || zipFile != '') {
 	       percent.width(percentVal);
 	     }
 	   },
 	   uploadProgress: function(event, position, total, percentComplete) {
 	       var percentVal = percentComplete + '%';
-	       if (file != '') {
+	       if (file != '' || zipFile != '') {
 	       percent.width(percentVal);
 	     }
 	   },
@@ -85,6 +86,7 @@
 	      }
 
 	       $('#file').val('');
+				 $('#zipFile').val('');
 	       $('#removeFile').hide();
 	       $('.previewFile').html('');
 	       $('#previewFile').html('');
@@ -103,6 +105,8 @@
 				 $('#showErrorMsg').html(result.error_custom).fadeIn(500);
 	       $('.progress-upload-cover').hide();
 	       percent.width(percentVal);
+				 $('#file').val('');
+				 $('#zipFile').val('');
 			 }
 				 else {
 			 var error = '';
@@ -118,6 +122,8 @@
 	       $('.blocked').hide();
 	       $('.progress-upload-cover').hide();
 	       percent.width(percentVal);
+				 $('#file').val('');
+				 $('#zipFile').val('');
 			 }
 
 			 if (result.session_null) {
@@ -315,8 +321,7 @@
 		 // Upload FILE
 		 $("#file").on('change', function() {
 
-		   $('.previewImage').fadeOut('');
-		     $('#removeFile').hide();
+		   $('#zipFile').val('');
 
 		   var loaded = false;
 		   if(window.File && window.FileReader && window.FileList && window.Blob) {
@@ -359,31 +364,79 @@
 		 });
 		 //============ END UPLOAD FILE
 
+		 //======= Upload File
+		 $("#zipFile").on('change', function() {
+
+		 $('#file').val('');
+
+		 var loaded = false;
+		 if(window.File && window.FileReader && window.FileList && window.Blob) {
+		 	 //check empty input filed
+		  if($(this).val()) {
+		 		var oFReader = new FileReader(), rFilter = /^(?:application\/x-zip-compressed)$/i;
+		 	 if($(this)[0].files.length === 0){return}
+
+		 	 var oFile = $(this)[0].files[0];
+		 	 var fsize = $(this)[0].files[0].size; //get file size
+		 	 var ftype = $(this)[0].files[0].type; // get file type
+
+		 		if(!rFilter.test(oFile.type)) {
+		 		 $('#zipFile').val('');
+		 			swal({
+		 			 title: error_oops,
+		 			 text: formats_available_upload_file,
+		 			 type: "error",
+		 			 confirmButtonText: ok
+		 			 });
+		 		 return false;
+		 	 }
+
+		 	 var allowed_file_size = file_size_allowed;
+
+		 	 if(fsize>allowed_file_size){
+		 		 swal({
+		 			title: error_oops,
+		 			text: max_size_id,
+		 			type: "error",
+		 			confirmButtonText: ok
+		 			});
+		 		return false;
+		 	 }
+			 $('#button-reply-msg').removeAttr('disabled').trigger('click');
+
+		  }
+		 } else{
+		  alert('Can\'t upload! Your browser does not support File API! Try again with modern browsers like Chrome or Firefox.');
+		  return false;
+		 }
+		 });
+		 //======= Upload File
+
 		 // Delete Conversation
 		 $(document).on('click','.actionDelete', function(e){
 
-		      e.preventDefault();
+		 		 e.preventDefault();
 
-		      var element = $(this);
-		      var form    = $(element).parents('form');
-		      element.blur();
+		 		 var element = $(this);
+		 		 var form    = $(element).parents('form');
+		 		 element.blur();
 
-		    swal(
-		      {   title: delete_confirm,
-		       text: confirm_delete_conversation,
-		        type: "error",
-		        showLoaderOnConfirm: true,
-		        showCancelButton: true,
-		        confirmButtonColor: "#DD6B55",
-		         confirmButtonText: yes_confirm,
-		         cancelButtonText: cancel_confirm,
-		          closeOnConfirm: false,
-		          },
-		          function(isConfirm){
-		             if (isConfirm) {
-		              form.submit();
-		              }
-		             });
-		       });// Delete Conversation
+		 	 swal(
+		 		 {   title: delete_confirm,
+		 			text: confirm_delete_conversation,
+		 			 type: "error",
+		 			 showLoaderOnConfirm: true,
+		 			 showCancelButton: true,
+		 			 confirmButtonColor: "#DD6B55",
+		 				confirmButtonText: yes_confirm,
+		 				cancelButtonText: cancel_confirm,
+		 				 closeOnConfirm: false,
+		 				 },
+		 				 function(isConfirm){
+		 						if (isConfirm) {
+		 						 form.submit();
+		 						 }
+		 						});
+		 			});// Delete Conversation
 
 })(jQuery);

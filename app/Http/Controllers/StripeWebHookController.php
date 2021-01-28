@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\AdminSettings;
 use Illuminate\Http\Response;
 use Illuminate\Notifications\Notifiable;

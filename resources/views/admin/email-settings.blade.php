@@ -152,7 +152,11 @@
                            <div class="form-group">
                              <label class="col-sm-2 control-label">{{trans('admin.mail_encryption')}}</label>
                              <div class="col-sm-10">
-                               <input type="password" value="{{ env('MAIL_ENCRYPTION') }}" name="MAIL_ENCRYPTION" class="form-control" placeholder="tls">
+                               <select name="MAIL_ENCRYPTION" class="form-control custom-select">
+                                 <option @if (env('MAIL_ENCRYPTION') == '') selected @endif value="">{{trans('general.none')}}</option>
+                                 <option @if (env('MAIL_ENCRYPTION') == 'tls') selected @endif value="tls">TLS</option>
+                                 <option @if (env('MAIL_ENCRYPTION') == 'ssl') selected @endif value="ssl">SSL</option>
+                               </select>
                              </div>
                            </div>
                          </div><!-- /.box-body -->

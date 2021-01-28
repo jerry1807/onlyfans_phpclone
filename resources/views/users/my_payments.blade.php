@@ -45,7 +45,7 @@
             </div>
             @endif
 
-          <div class="card shadow-sm">
+        <div class="card shadow-sm">
           <div class="table-responsive">
             <table class="table table-striped m-0">
               <thead>
@@ -57,6 +57,7 @@
                 @endif
                   <th scope="col">{{trans('admin.date')}}</th>
                   <th scope="col">{{trans('admin.amount')}}</th>
+                  <th scope="col">{{trans('admin.type')}}</th>
                   @if (request()->is('my/payments/received'))
                     <th scope="col">{{trans('general.paid_by')}}</th>
                     <th scope="col">{{trans('general.earnings')}}</th>
@@ -79,6 +80,7 @@
                     @endif
                     <td>{{ Helper::formatDate($transaction->created_at) }}</td>
                     <td>{{ Helper::amountFormatDecimal($transaction->amount) }}</td>
+                    <td>{{ __('general.'.$transaction->type) }}</td>
                     @if (request()->is('my/payments/received'))
                       <td>{{ $transaction->user()->username ?? trans('general.no_available') }}</td>
                     <td>{{ Helper::amountFormatDecimal($transaction->earning_net_user) }}</td>

@@ -11,11 +11,9 @@
           <p class="lead text-muted mt-0">{{trans('general.subtitle_delete_account')}}</p>
         </div>
       </div>
-      <div class="row">
+      <div class="row justify-content-center">
 
-        @include('includes.cards-settings')
-
-        <div class="col-md-6 col-lg-9 mb-5 mb-lg-0">
+        <div class="col-md-7 mb-5 mb-lg-0">
 
 
       @if (session('incorrect_pass'))
@@ -44,6 +42,10 @@
                 </div>
 
                 <button class="btn btn-1 btn-danger btn-block" id="buttonDeleteAccount" type="submit">{{trans('general.delete_account')}}</button>
+
+                <div class="text-center mt-3">
+                  <a href="{{ url('settings/page') }}">{{ trans('admin.cancel') }}</a>
+                </div>
 
           </form>
 

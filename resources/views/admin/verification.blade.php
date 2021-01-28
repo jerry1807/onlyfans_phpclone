@@ -45,7 +45,7 @@
                   @foreach ($data as $verify)
                     <tr>
                       <td>{{ $verify->id }}</td>
-                      <td><a href="{{ url($verify->user()->username) }}" target="_blank">{{ $verify->user()->username }} <i class="fa fa-external-link-square-alt"></i></a></td>
+                      <td><a href="{{ url($verify->user()->username) }}" target="_blank">{{ $verify->user()->name }} <i class="fa fa-external-link-square-alt"></i></a></td>
                       <td>{{ $verify->address }}</td>
                       <td>{{ $verify->city }}</td>
                       <td>{{ $verify->zip }}</td>

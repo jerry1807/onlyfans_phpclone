@@ -18,6 +18,20 @@
    <priority>0.8</priority>
  </url>
 
+ <url>
+    <loc>{{ url('blog') }}</loc>
+    <lastmod>{{$date}}</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  @foreach (App\Models\Blogs::all() as $post)
+  <url>
+     <loc>{{ url('blog/post', $post->id).'/'.$post->slug }}</loc>
+     <lastmod>{{$date}}</lastmod>
+     <priority>0.8</priority>
+  </url>
+   @endforeach
+
 @foreach (Pages::all() as $page)
 <url>
    <loc>{{ url('p', $page->slug) }}</loc>

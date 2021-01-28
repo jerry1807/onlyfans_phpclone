@@ -102,4 +102,102 @@ new Morris.Area({
         el.html(el.html() + ': ' + visitorsData[code] + ' {{ trans("admin.registered_members") }}');
     }
   });
+
+  @php
+  $month = date('m');
+  $year = date('Y');
+  $daysMonth = Helper::daysInMonth($month, $year);
+  $dateFormat = "$year-$month-";
+
+  $monthFormat  = trans("months.$month");
+  $currencySymbol = $settings->currency_symbol;
+
+  for ($i=1; $i <= $daysMonth; ++$i) {
+
+    $date = date('Y-m-d', strtotime($dateFormat.$i));
+    $_subscriptions = Transactions::whereDate('created_at', '=', $date)->sum('earning_net_admin');
+
+    $monthsData[] =  "'$monthFormat $i'";
+
+
+    $_earningNetUser = $_subscriptions;
+
+    $earningNetUserSum[] = $_earningNetUser;
+
+  }
+
+  $label = implode(',', $monthsData);
+  $data = implode(',', $earningNetUserSum);
+  @endphp
+
+  function decimalFormat(nStr)
+  {
+    @if ($settings->decimal_format == 'dot')
+  	 var $decimalDot = '.';
+  	 var $decimalComma = ',';
+  	 @else
+  	 var $decimalDot = ',';
+  	 var $decimalComma = '.';
+  	 @endif
+
+     @if ($settings->currency_position == 'left')
+     var currency_symbol_left = '{{$settings->currency_symbol}}';
+     var currency_symbol_right = '';
+     @else
+     var currency_symbol_right = '{{$settings->currency_symbol}}';
+     var currency_symbol_left = '';
+     @endif
+
+      nStr += '';
+      var x = nStr.split('.');
+      var x1 = x[0];
+      var x2 = x.length > 1 ? $decimalDot + x[1] : '';
+      var rgx = /(\d+)(\d{3})/;
+      while (rgx.test(x1)) {
+          var x1 = x1.replace(rgx, '$1' + $decimalComma + '$2');
+      }
+      return currency_symbol_left + x1 + x2 + currency_symbol_right;
+    }
+
+    var init = document.getElementById("salesChart").getContext('2d');
+    var ChartArea = new Chart(init, {
+        type: 'line',
+        data: {
+            labels: [{!!$label!!}],
+            datasets: [{
+                label: '{{trans('general.earnings')}} ',
+                backgroundColor: '{{$settings->color_default}}',
+                borderColor: '{{$settings->color_default}}',
+                data: [{!!$data!!}],
+                borderWidth: 2,
+                fill: true,
+                lineTension: 0,
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        min: 0, // it is for ignoring negative step.
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            return '@if($settings->currency_position == 'left'){{ $settings->currency_symbol }}@endif' + value + '@if($settings->currency_position == 'right'){{ $settings->currency_symbol }}@endif';
+                        }
+                    }
+                }]
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(t, d) {
+                        var xLabel = d.datasets[t.datasetIndex].label;
+                        var yLabel = decimalFormat(t.yLabel);
+                        return xLabel + ': ' + yLabel;
+                    }
+                }
+            },
+            legend: {
+                display: false
+            }
+        }
+    });
 })(jQuery);

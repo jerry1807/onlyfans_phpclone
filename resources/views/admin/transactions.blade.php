@@ -56,7 +56,7 @@
                       <th class="active">ID</th>
                       <th class="active">{{ trans('admin.transaction_id') }}</th>
                       <th class="active">{{ trans('general.user') }}</th>
-                      <th class="active">{{ trans('auth.email') }}</th>
+                      <th class="active">{{ trans('admin.type') }}</th>
                       <th class="active">{{ trans('admin.amount') }}</th>
                       <th class="active">{{ trans('admin.earnings_admin') }}</th>
                       <th class="active">{{ trans('general.payment_gateway') }}</th>
@@ -77,7 +77,7 @@
                         </a>
                         @endif
                     </td>
-                      <td>{{$transaction->user()->email ?? trans('general.no_available')}}
+                      <td>{{ __('general.'.$transaction->type) }}
                       </td>
                       <td>{{ Helper::amountFormatDecimal($transaction->amount) }}</td>
                       <td>{{ Helper::amountFormatDecimal($transaction->earning_net_admin) }}</td>

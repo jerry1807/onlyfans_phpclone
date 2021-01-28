@@ -64,6 +64,35 @@
                   <!-- Start Box Body -->
                   <div class="box-body">
                     <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('admin.verified') }}</label>
+                      <div class="col-sm-10">
+                      	<select name="verified" class="form-control">
+                            <option @if( $data->verified_id == 'no' ) selected="selected" @endif value="no">{{ trans('admin.pending') }}</option>
+						  	<option @if( $data->verified_id == 'yes' ) selected="selected" @endif value="yes">{{ trans('admin.verified') }}</option>
+						  	<option @if( $data->verified_id == 'reject' ) selected="selected" @endif value="reject">{{ trans('admin.reject') }}</option>
+                          </select>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('admin.status') }}</label>
+                      <div class="col-sm-10">
+                      	<select name="status" class="form-control">
+                            <option @if( $data->status == 'pending' ) selected="selected" @endif value="pending">{{ trans('admin.pending') }}</option>
+						  	<option @if( $data->status == 'active' ) selected="selected" @endif value="active">{{ trans('admin.active') }}</option>
+						  	<option @if( $data->status == 'suspended' ) selected="suspended" @endif value="suspended">{{ trans('admin.suspended') }}</option>
+
+                          </select>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
                       <label class="col-sm-2 control-label">{{ trans('admin.role') }}</label>
                       <div class="col-sm-10">
                         <select name="role" class="form-control" >
@@ -123,10 +152,22 @@
         		<img src="{{Storage::url(config('path.avatar').$data->avatar)}}" class="thumbnail img-responsive">
         	</div>
 
+          @php
+
+          if ($data->status == 'pending') {
+            $_status = trans('admin.pending');
+          } elseif ($data->status == 'active') {
+            $_status = trans('admin.active');
+          } else {
+            $_status = trans('admin.suspended');
+          }
+
+          @endphp
+
         	<ol class="list-group">
 			<li class="list-group-item"> {{trans('admin.registered')}} <span class="pull-right color-strong">{{ Helper::formatDate($data->date) }}</span></li>
 
-			<li class="list-group-item"> {{trans('admin.status')}} <span class="pull-right color-strong">{{ ucfirst($data->status) }}</span></li>
+			<li class="list-group-item"> {{trans('admin.status')}} <span class="pull-right color-strong">{{ $_status }}</span></li>
 
 			<li class="list-group-item"> {{trans('general.country')}} <span class="pull-right color-strong">@if( $data->countries_id != '' ) {{ $data->country()->country_name }} @else {{ trans('admin.not_established') }} @endif</span></li>
 
@@ -138,13 +179,19 @@
         {{trans('general.go_to_page')}}
       </a>
 
-		{!! Form::open([
-			            'method' => 'DELETE',
-			            'route' => ['user.destroy', $data->id],
-			            'class' => 'displayInline'
-				        ]) !!}
-	            	{!! Form::submit(trans('admin.delete'), ['data-url' => $data->id, 'class' => 'btn btn-lg btn-danger btn-block margin-bottom-10 actionDelete']) !!}
-	        	{!! Form::close() !!}
+      @if ($data->status == 'pending')
+        <a href="{{url('panel/admin/resend/email', $data->id)}}" class="btn btn-lg btn-default btn-block margin-bottom">
+          {{trans('general.resend_confirmation_email')}}
+        </a>
+      @endif
+
+  		{!! Form::open([
+            'method' => 'DELETE',
+            'route' => ['user.destroy', $data->id],
+            'class' => 'displayInline'
+          ]) !!}
+  	        {!! Form::submit(trans('admin.delete'), ['data-url' => $data->id, 'class' => 'btn btn-lg btn-danger btn-block margin-bottom-10 actionDelete']) !!}
+  	    {!! Form::close() !!}
 	        </div>
         </div><!-- col-md-3 -->
   		</div><!-- /.row -->

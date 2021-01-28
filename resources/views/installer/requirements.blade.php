@@ -138,6 +138,15 @@
                 							</div>
                 					</div><!--- ./ list-group-item -->
 
+                          <div class="list-group-item d-flex justify-content-between">
+                							<div>
+                									<span>Exif</span>
+                							</div>
+                							<div>
+                									<i class="fas fa-{{ $exif ? 'check-circle text-success' : 'times-circle text-danger' }}"></i>
+                							</div>
+                					</div><!--- ./ list-group-item -->
+
                         </div>
                       </div>
 

@@ -9,14 +9,6 @@
     </div>
   </div>
 
-  @if (Auth::user()->verified_id == 'no')
-  <div class="alert alert-danger mb-3">
-           <ul class="list-unstyled m-0">
-             <li><i class="fa fa-exclamation-triangle"></i> {{trans('general.verified_account_info')}} <a href="{{url('settings/verify/account')}}" class="text-white link-border">{{trans('general.verify_account')}}</a></li>
-           </ul>
-         </div>
-         @endif
-
       <form method="POST" action="{{url('update/create')}}" enctype="multipart/form-data" id="formUpdateCreate">
         @csrf
       <div class="card mb-4">
@@ -45,8 +37,14 @@
           <div class="justify-content-between align-items-center">
             <input type="file" name="photo" id="filePhoto" accept="image/*,video/mp4,video/x-m4v,video/quicktime,audio/mp3" class="visibility-hidden">
 
-            <button type="button" class="btn btn-upload e-none btn-link text-primary rounded-pill" title="{{trans('general.upload_media')}}" onclick="$('#filePhoto').trigger('click')">
+            <button type="button" class="btn btn-upload e-none btn-link text-primary rounded-pill" data-toggle="tooltip" data-placement="top" title="{{trans('general.upload_media')}}" onclick="$('#filePhoto').trigger('click')">
               <i class="far fa-image f-size-25"></i>
+            </button>
+
+            <input type="file" name="zip" id="fileZip" accept="application/x-zip-compressed" class="visibility-hidden">
+
+            <button type="button" class="btn btn-upload e-none btn-link text-primary rounded-pill" data-toggle="tooltip" data-placement="top" title="{{trans('general.upload_file_zip')}}" onclick="$('#fileZip').trigger('click')">
+              <i class="far fa-file-archive f-size-25"></i>
             </button>
 
             <button type="button" id="contentLocked" class="btn btn-upload e-none btn-link text-primary rounded-pill {{auth()->user()->post_locked == 'yes' ? '' : 'unlock'}}" data-toggle="tooltip" data-placement="top" title="{{trans('users.locked_content')}}">

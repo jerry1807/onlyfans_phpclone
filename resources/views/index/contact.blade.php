@@ -2,14 +2,20 @@
 
 @section('title') {{trans('general.contact')}} -@endsection
 
+@section('css')
+  <script type="text/javascript">
+      var error_scrollelement = {{ count($errors) > 0 ? 'true' : 'false' }};
+  </script>
+@endsection
+
 @section('content')
   <div class="jumbotron home m-0 bg-gradient">
     <div class="container pt-lg-md">
       <div class="row justify-content-center">
         <div class="col-lg-6">
-          <div class="card bg-light shadow border-0">
+          <div class="card bg-white shadow border-0">
 
-          <div class="card-header bg-white py-4">
+          <div class="p-4">
             <h4 class="text-center mb-0 font-weight-bold">
               {{trans('general.contact')}}
             </h4>
@@ -97,12 +103,4 @@
       </div>
     </div>
   </div>
-@endsection
-
-@section('javascript')
-<script type="text/javascript">
-	@if(count($errors) > 0)
-    	scrollElement('#dangerAlert');
-    @endif
-</script>
 @endsection

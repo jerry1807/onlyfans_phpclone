@@ -26,7 +26,7 @@ return [
     'login_with'		  =>	  'Login with',
     'sign_up_with'		  =>	  'Sign up with',
     'signup'		  =>	  'Sign up',
-  	'or_sign_up_with'		  =>	  'Or Sign up with',
+  	'or_sign_up_with'		  =>	  'Or sign up with your email',
   	'username_or_email'		  =>	  'Username or Email',
   	'username'		          =>	  'Username',
     'name' => 'Name',

@@ -7,7 +7,7 @@
     <div class="container">
       <div class="row justify-content-center text-center mb-sm">
         <div class="col-lg-8 py-5">
-          <h2 class="mb-0 font-montserrat"><i class="far fa-check-circle mr-2"></i> {{trans('general.verify_account')}}</h2>
+          <h2 class="mb-0 font-montserrat"><i class="feather icon-check-circle mr-2"></i> {{trans('general.verify_account')}}</h2>
           <p class="lead text-muted mt-0">{{Auth::user()->verified_id != 'yes' ? trans('general.verified_account_desc') : trans('general.verified_account')}}</p>
         </div>
       </div>
@@ -29,7 +29,7 @@
 
           @include('errors.errors-forms')
 
-        @if(Auth::user()->verified_id != 'yes')
+        @if (auth()->user()->verified_id != 'yes' && auth()->user()->verificationRequests() != 1 && auth()->user()->verified_id != 'reject')
           <div class="alert alert-warning alert-dismissible fade show" role="alert">
           <span class="alert-inner--text"><i class="fa fa-exclamation-triangle"></i> {{trans('general.warning_verification_info')}}</span>
         </div>
@@ -68,20 +68,29 @@
                 <div class="mb-3 text-center">
                   <span class="btn-block mb-2" id="previewImage"></span>
 
-                    <input type="file" name="image" id="fileVerifiyAccount" accept="image/*" class="visibility-hidden">
-                    <button class="btn btn-1 btn-block btn-outline-primary mb-2 border-dashed" type="button" id="btnFilePhoto">{{trans('general.upload_image')}} (JPG, PNG, GIF - {{trans('general.maximum')}}: {{Helper::formatBytes($settings->file_size_allowed_verify_account * 1024)}})</button>
+                    <input type="file" name="image" id="fileVerifiyAccount" accept="image/*,application/x-zip-compressed" class="visibility-hidden">
+                    <button class="btn btn-1 btn-block btn-outline-primary mb-2 border-dashed" type="button" id="btnFilePhoto">{{trans('general.upload_image')}} (JPG, PNG, GIF) {{trans('general.or')}} ZIP - {{trans('general.maximum')}}: {{Helper::formatBytes($settings->file_size_allowed_verify_account * 1024)}}</button>
 
                   <small class="text-muted btn-block">{{trans('general.info_verification_user')}}</small>
                 </div>
 
                 <button class="btn btn-1 btn-success btn-block" id="sendData" type="submit">{{trans('general.send_approval')}}</button>
           </form>
+        @elseif (auth()->user()->verificationRequests() == 1)
+          <div class="alert alert-primary alert-dismissible text-center fade show" role="alert">
+            <span class="alert-inner--icon mr-2"><i class="fa fa-info-circle"></i></span>
+          <span class="alert-inner--text">{{trans('admin.pending_request_verify')}}</span>
+        </div>
+      @elseif (auth()->user()->verified_id == 'reject')
+        <div class="alert alert-danger alert-dismissible text-center fade show" role="alert">
+          <span class="alert-inner--icon mr-2"><i class="fa fa-info-circle"></i></span>
+        <span class="alert-inner--text">{{trans('admin.rejected_request')}}</span>
+      </div>
         @else
           <div class="alert alert-success alert-dismissible text-center fade show" role="alert">
-            <span class="alert-inner--icon mr-2"><i class="far fa-check-circle"></i></span>
+            <span class="alert-inner--icon mr-2"><i class="feather icon-check-circle"></i></span>
           <span class="alert-inner--text">{{trans('general.verified_account_success')}}</span>
         </div>
-
         @endif
         </div><!-- end col-md-6 -->
 

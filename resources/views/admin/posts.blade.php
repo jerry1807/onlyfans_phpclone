@@ -58,6 +58,9 @@
 
                       @elseif ($update->music !== '')
                       <i class="fa fa-music"></i>  {{ trans('general.audio') }}
+
+                    @elseif ($update->file !== '')
+                      <i class="far fa-file-archive"></i>  {{ trans('general.file') }}
                       @else
 
                       <i class="fa fa-font"></i>    {{ trans('admin.text') }}

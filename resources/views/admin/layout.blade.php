@@ -208,6 +208,11 @@
             </li><!-- ./Links -->
 
             <!-- Links -->
+           <li @if (Request::is('panel/admin/deposits')) class="active" @endif>
+             <a href="{{ url('panel/admin/deposits') }}"><i class="fa fa-money-bill-alt"></i> <span>{{ trans('general.deposits') }}</span></a>
+           </li><!-- ./Links -->
+
+            <!-- Links -->
             <li @if(Request::is('panel/admin/members')) class="active" @endif>
             	<a href="{{ url('panel/admin/members') }}"><i class="glyphicon glyphicon-user"></i> <span>{{ trans('admin.members') }}</span></a>
             </li><!-- ./Links -->
@@ -221,8 +226,6 @@
             <li @if(Request::is('panel/admin/categories')) class="active" @endif>
             	<a href="{{ url('panel/admin/categories') }}"><i class="fa fa-list-ul"></i> <span>{{ trans('admin.categories') }}</span></a>
             </li><!-- ./Links -->
-
-
 
             <!-- Links -->
             <li @if(Request::is('panel/admin/reports')) class="active" @endif>
@@ -271,7 +274,9 @@
                   <?php
                   foreach (PaymentGateways::all() as $key) {
                     ?>
-                    <li @if(Request::is('panel/admin/payments/'.$key->id)) class="active" @endif><a href="{{ url('panel/admin/payments/'.$key->id) }}"><i class="fas fa fa-angle-right"></i> {{ $key->name }}</a></li>
+                    <li @if(Request::is('panel/admin/payments/'.$key->id)) class="active" @endif>
+                      <a href="{{ url('panel/admin/payments/'.$key->id) }}"><i class="fas fa fa-angle-right"></i> {{ $key->type == 'bank' ? trans('general.bank_transfer') : $key->name }}</a>
+                    </li>
                 <?php
                   }
                 ?>

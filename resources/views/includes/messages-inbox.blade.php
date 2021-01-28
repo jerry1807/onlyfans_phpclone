@@ -7,7 +7,7 @@ if ($msg->last()->from_user_id == Auth::user()->id && $msg->last()->to()->id != 
 		 $name     = $msg->last()->to()->name;
 		 $userID   = $msg->last()->to()->id;
 		 $username = $msg->last()->to()->username;
-		 $icon     = $msg->last()->status == 'readed' ? '<small><i class="fa fa-check mr-1 text-muted"></i></small>' : '<small><i class="fa fa-reply mr-1 text-muted"></i></small>';
+		 $icon     = $msg->last()->status == 'readed' ? '<small><i class="fa fa-check-double mr-1 text-muted"></i></small>' : '<small><i class="fa fa-reply mr-1 text-muted"></i></small>';
 
 	} else if($msg->last()->from_user_id == Auth::user()->id){
 		 $avatar   = $msg->last()->to()->avatar;
@@ -23,18 +23,25 @@ if ($msg->last()->from_user_id == Auth::user()->id && $msg->last()->to()->id != 
 		 $icon = null;
 	}
 
-	switch($msg->last()->format) {
+	switch ($msg->last()->format) {
 		case 'image':
-			$iconMedia = '<i class="fa fa-image"></i> '.trans('general.image');
+			$iconMedia = '<i class="feather icon-image"></i> '.trans('general.image');
 			break;
 		case 'video':
-			$iconMedia = '<i class="fa fa-video"></i> '.trans('general.video');
+			$iconMedia = '<i class="feather icon-video"></i> '.trans('general.video');
 			break;
 		case 'music':
-			$iconMedia = '<i class="fa fa-music"></i> '.trans('general.audio');
+			$iconMedia = '<i class="feather icon-mic"></i> '.trans('general.audio');
 			break;
+		case 'zip':
+			$iconMedia = '<i class="far fa-file-archive"></i> '.trans('general.file');
+				break;
 		default:
 			$iconMedia = null;
+	}
+
+	if ($msg->last()->tip == 'yes') {
+		$iconMedia = '<i class="fa fa-donate mr-1"></i>'.trans('general.tip');
 	}
 
 /* New - Readed */

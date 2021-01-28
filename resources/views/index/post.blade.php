@@ -2,6 +2,7 @@
 
 @section('title') {{ $response->title }} | {{ trans('general.blog') }} @endsection
   @section('description_custom'){{strip_tags($response->content)}}@endsection
+    @section('keywords_custom'){{$response->tags ? $response->tags.',' : null}}@endsection
 
   @section('css')
     <meta property="og:type" content="website" />

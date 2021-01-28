@@ -31,21 +31,42 @@ class StripeController extends Controller
   protected function show()
   {
 
-    if ( ! $this->request->expectsJson()) {
+    if (! $this->request->expectsJson()) {
         abort(404);
     }
 
-    if ( ! auth()->user()->hasPaymentMethod()) {
+    if (! auth()->user()->hasPaymentMethod()) {
       return response()->json([
         "success" => false,
         'errors' => ['error' => trans('general.please_add_payment_card')]
       ]);
     }
 
-      try {
+    // Find the user to subscribe
+    $user = User::whereVerifiedId('yes')->whereId($this->request->id)->where('id', '<>', Auth::user()->id)->firstOrFail();
+    $payment = PaymentGateways::whereId(2)->whereName('Stripe')->whereEnabled(1)->first();
+    $stripe = new \Stripe\StripeClient($payment->key_secret);
 
-        // Find the user to subscribe
-        $user = User::whereVerifiedId('yes')->whereId($this->request->id)->where('id', '<>', Auth::user()->id)->firstOrFail();
+    // Verify Plan Exists
+    try {
+      $planCurrent = $stripe->plans->retrieve($user->plan, []);
+
+    } catch (\Exception $exception) {
+
+      // If it does not exist we create the plan
+      $plan = $stripe->plans->create([
+          'currency' => $this->settings->currency_code,
+          'interval' => 'month',
+          "product" => [
+              "name" => trans('general.subscription_for').' @'.$user->username,
+          ],
+          'nickname' => $user->plan,
+          'id' => $user->plan,
+          'amount' => $this->settings->currency_code == 'JPY' ? $user->price : $user->price * 100,
+      ]);
+    }
+
+      try {
 
         // Check Payment Incomplete
         if (Auth::user()

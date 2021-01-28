@@ -41,6 +41,7 @@ class InstallScriptController extends Controller
     $xml       =  extension_loaded('XML') ? true : false;
     $curl      =  extension_loaded('cURL') ? true : false;
     $gd        = extension_loaded('gd') ? true : false;
+    $exif      = extension_loaded('exif') ? true : false;
 
     return view('installer.requirements', [
       'versionPHP' => $versionPHP,
@@ -56,6 +57,7 @@ class InstallScriptController extends Controller
       'xml' => $xml,
       'curl' => $curl,
       'gd' => $gd,
+      'exif' => $exif,
     ]);
   }
 
@@ -85,6 +87,7 @@ class InstallScriptController extends Controller
       $data = $request->validate([
         'database'     => 'required|string|max:50',
         'username'     => 'required|string|max:50',
+        'host'         => 'required|string|max:70',
         'app_name'     => 'required|string|max:50',
         'app_url'      => 'required|url',
         'email_admin'  => 'required|email',
@@ -93,6 +96,7 @@ class InstallScriptController extends Controller
       // Database
       Helper::envUpdate('DB_DATABASE', $request->database);
       Helper::envUpdate('DB_USERNAME', $request->username);
+      Helper::envUpdate('DB_HOST', $request->host);
       Helper::envUpdate('DB_PASSWORD', ' "'.$request->password.'" ', true);
 
       // App

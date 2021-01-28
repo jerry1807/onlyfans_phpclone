@@ -73,7 +73,7 @@ return array(
 	'locked_content' => 'Publish a locked content viewable only to your subscribers.',
 	'edit_update' => 'Edit Update',
 	'go_back_to_my_page' => 'Go back to my page',
-	'the_best_creators_is_here' => 'The best Creators Content is here',
+	'the_best_creators_is_here' => 'The best of content creators are here',
 	'creators_in_this_category' => 'Creator in this category|Creators in this category',
 	'please_select_a' => 'Please select a',
 	'has_subscribed' => 'has subscribed to your content',

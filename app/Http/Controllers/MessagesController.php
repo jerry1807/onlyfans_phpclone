@@ -85,27 +85,38 @@ class MessagesController extends Controller
       // Check if subscription exists
       $subscribedToYourContent = Auth::user()
         ->mySubscriptions()
-          ->where('user_id', Auth::user()->id)
-          ->whereStripePlan($user->plan)
+          ->where('user_id', $user->id)
+          ->whereStripePlan(Auth::user()->plan)
           ->where('stripe_id', '=', '')
           ->whereDate('ends_at', '>=', Carbon::today())
+
           ->orWhere('stripe_status', 'active')
             ->where('user_id', Auth::user()->id)
             ->where('stripe_id', '<>', '')
             ->whereStripePlan($user->plan)
-            ->count();
+
+            ->orWhere('stripe_id', '=', '')
+          ->where('stripe_plan', $user->plan)
+          ->where('free', '=', 'yes')
+        ->whereUserId(Auth::user()->id)
+        ->count();
 
       $subscribedToMyContent = Auth::user()
         ->userSubscriptions()
-        ->where('user_id', $user->id)
-        ->whereStripePlan(Auth::user()->plan)
+        ->whereStripePlan($user->plan)
         ->where('stripe_id', '=', '')
         ->whereDate('ends_at', '>=', Carbon::today())
+
         ->orWhere('stripe_status', 'active')
           ->where('stripe_id', '<>', '')
           ->where('user_id', $user->id)
           ->whereStripePlan(Auth::user()->plan)
-          ->count();
+
+          ->orWhere('stripe_id', '=', '')
+        ->where('stripe_plan', Auth::user()->plan)
+        ->where('free', '=', 'yes')
+      ->whereUserId($user->id)
+      ->count();
 
 			return view('users.messages-show', [
             'messages' => $messages,
@@ -213,10 +224,15 @@ class MessagesController extends Controller
          $requiredMessage = 'required|';
        }
 
+       if ($request->hasFile('zip')) {
+         $requiredMessage = null;
+       }
+
 			// Setup the validator
 			$rules = [
         'photo'  => 'mimetypes:image/jpeg,image/gif,image/png,video/mp4,video/quicktime,audio/mpeg'.$audio.'|max:'.$settings->file_size_allowed.','.$isImage.'',
 				'message' => $requiredMessage.'|min:1|max:'.$settings->comment_length.'',
+        'zip'     => 'mimes:zip|max:'.$settings->file_size_allowed.'',
       ];
 
 			$messages = [
@@ -236,6 +252,20 @@ class MessagesController extends Controller
 			        'errors' => $validator->getMessageBag()->toArray(),
 			    ));
 			}
+
+      // Upload File Zip
+      if ($request->hasFile('zip')) {
+
+        $fileZip         = $request->file('zip');
+        $extension       = $fileZip->getClientOriginalExtension();
+        $size            = Helper::formatBytes($fileZip->getSize(), 1);
+        $originalName    = Helper::fileNameOriginal($fileZip->getClientOriginalName());
+        $file            = strtolower(Auth::user()->id.time().Str::random(20).'.'.$extension);
+        $format          = 'zip';
+
+        $fileZip->storePubliclyAs($path, $file);
+
+      }
 
         //============= Upload Media
         if ($request->hasFile('photo') && $isImage != null) {
@@ -338,7 +368,7 @@ class MessagesController extends Controller
           $conversationID = $conversation->id;
         }
 
-        if ($request->hasFile('photo')) {
+        if ($request->hasFile('photo') || $request->hasFile('zip')) {
             $message = new Messages;
             $message->conversations_id = $conversationID;
     				$message->from_user_id     = Auth::user()->id;
@@ -418,9 +448,11 @@ class MessagesController extends Controller
           $username = $msg->from()->username;
          }
 
+         $imageMsg = url('files/messages', $msg->id).'/'.$msg->file;
+
          if ($msg->file != '' && $msg->format == 'image') {
-           $messageChat = '<a href="'.Storage::url(config('path.messages')).$msg->file.'" data-group="gallery'.$msg->id.'" class="js-smartPhoto">
-           <div class="container-media-img" style="background-image: url('.Storage::url(config('path.messages')).$msg->file.')"></div>
+           $messageChat = '<a href="'.$imageMsg.'" data-group="gallery'.$msg->id.'" class="js-smartPhoto">
+           <div class="container-media-img" style="background-image: url('.$imageMsg.')"></div>
            </a>';
          } elseif ($msg->file != '' && $msg->format == 'video') {
            $messageChat = '<div class="container-media-msg"><video class="js-player" controls>
@@ -432,23 +464,68 @@ class MessagesController extends Controller
              <source src="'.Storage::url(config('path.messages').$msg->file).'" type="audio/mp3">
              Your browser does not support the audio tag.
            </audio></div>';
+         } elseif ($msg->file != '' && $msg->format == 'zip') {
+           $messageChat = '<a href="'.url('download/message/file', $msg->id).'" class="d-block text-decoration-none">
+       			<div class="card">
+       			  <div class="row no-gutters">
+       			    <div class="col-md-3 text-center bg-primary">
+       			      <i class="far fa-file-archive m-2 text-white" style="font-size: 40px;"></i>
+       			    </div>
+       			    <div class="col-md-9">
+       			      <div class="card-body py-2 px-4">
+       			        <h6 class="card-title text-primary text-truncate mb-0">
+       								'.$msg->original_name.'.zip
+       							</h6>
+       			        <p class="card-text">
+       								<small class="text-muted">'.$msg->size.'</small>
+       							</p>
+       			      </div>
+       			    </div>
+       			  </div>
+       			</div>
+       			</a>';
+         } elseif ($msg->tip == 'yes') {
+           $messageChat = '<div class="card">
+              <div class="row no-gutters">
+                <div class="col-md-12">
+                  <div class="card-body py-2 px-4">
+                    <h6 class="card-title text-primary text-truncate mb-0">
+                      <i class="fa fa-donate mr-1"></i> '.__('general.tip'). ' -- ' .Helper::amountWithoutFormat($msg->tip_amount).'
+                    </h6>
+                  </div>
+                </div>
+              </div>
+            </div>';
          } else {
            $messageChat = Helper::linkText(Helper::checkText($msg->message));
          }
 
          if ($msg->from()->id == auth()->user()->id) {
 
-           if ($msg->file != '') {
+           if ($msg->file != '' || $msg->tip == 'yes') {
              $bgColor = 'media-container';
            } else {
              $bgColor = 'bg-primary';
            }
+
+           if ($msg->format == 'zip') {
+             $width = 'w-50';
+           } else {
+             $width = 'w-auto';
+           }
+
+            if ($msg->tip == 'no') {
+              $deleteMsg = '<a href="javascript:void(0);" class="btn-removeMsg removeMsg" data="'.$msg->id.'" title="'.trans('general.delete').'">
+                <i class="fa fa-trash-alt"></i>
+                </a>';
+            } else {
+              $deleteMsg = null;
+            }
+
            $message = '<div data="'.$msg->id.'" class="media py-2 chatlist">
              <div class="media-body position-relative">
-             <a href="javascript:void(0);" class="btn-removeMsg removeMsg" data="'.$msg->id.'" title="'.trans('general.delete').'">
-               <i class="fa fa-trash-alt"></i>
-               </a>
-               <div class="position-relative text-word-break message '.$bgColor.' text-white m-0 w-auto float-right rounded-bottom-right-0">
+             '.$deleteMsg.'
+               <div class="position-relative text-word-break message '.$bgColor.' text-white m-0 '.$width.' float-right rounded-bottom-right-0">
                   '.$messageChat.'
                </div>
                <small class="timeAgo w-100 d-block text-muted float-right text-right pr-1" data="'.date('c',strtotime($msg->created_at)).'"></small>
@@ -459,17 +536,24 @@ class MessagesController extends Controller
              </a>
            </div>';
          } else {
-           if ($msg->file != '') {
+           if ($msg->file != '' || $msg->tip == 'yes') {
              $bgColorLight = 'media-container';
            } else {
              $bgColorLight = 'bg-light';
            }
+
+           if ($msg->format == 'zip') {
+             $width = 'w-50';
+           } else {
+             $width = 'w-auto';
+           }
+
            $message = '<div data="'.$msg->id.'" class="media py-2 chatlist">
            <a href="'.url($msg->from()->username).'" class="align-self-end mr-3">
              <img src="'.Storage::url(config('path.avatar').$msg->from()->avatar).'" class="rounded-circle avatar-chat" width="50" height="50">
            </a>
              <div class="media-body position-relative">
-               <div class="position-relative text-word-break message '.$bgColorLight.' m-0 w-auto float-left rounded-bottom-left-0">
+               <div class="position-relative text-word-break message '.$bgColorLight.' m-0 '.$width.' float-left rounded-bottom-left-0">
                  '.$messageChat.'
                </div>
                <small class="timeAgo w-100 d-block text-muted float-left pl-1" data="'.date('c',strtotime($msg->created_at)).'"></small>
@@ -613,5 +697,22 @@ class MessagesController extends Controller
         return redirect('messages');
       }
     }//<--- End Method delete
+
+    // Download File
+    public function downloadFileZip($id)
+   {
+     $msg = Messages::findOrFail($id);
+
+     $pathFile = config('path.messages').$msg->file;
+     $headers = [
+       'Content-Type:' => ' application/x-zip-compressed',
+       'Cache-Control' => 'no-cache, no-store, must-revalidate',
+       'Pragma' => 'no-cache',
+       'Expires' => '0'
+     ];
+
+     return Storage::download($pathFile, $msg->original_name.'.zip', $headers);
+
+   }
 
 }

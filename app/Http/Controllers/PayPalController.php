@@ -31,7 +31,7 @@ class PayPalController extends Controller
     public function show()
     {
 
-    if (!$this->request->expectsJson()) {
+    if (! $this->request->expectsJson()) {
         abort(404);
     }
 
@@ -61,7 +61,7 @@ class PayPalController extends Controller
   					        <input type="hidden" name="notify_url" value="'.$urlPaypalIPN.'">
   					        <input type="hidden" name="currency_code" value="'.$this->settings->currency_code.'">
   					        <input type="hidden" name="amount" id="amount" value="'.$user->price.'">
-  					        <input type="hidden" name="custom" value="id='.$this->request->id.'&amount='.$user->price.'&subscriber='.Auth::user()->id.'&name='.Auth::user()->name.'">
+  					        <input type="hidden" name="custom" value="id='.$this->request->id.'&amount='.$user->price.'&subscriber='.Auth::user()->id.'&name='.Auth::user()->name.'&plan='.$user->plan.'">
   					        <input type="hidden" name="item_name" value="'.trans('general.subscription_desc_buy').' @'.$user->username.'">
   					        <input type="hidden" name="business" value="'.$payment->email.'">
   					        <input type="submit">
@@ -118,8 +118,8 @@ class PayPalController extends Controller
         // Insert DB
         $sql          = new Subscriptions;
         $sql->user_id = $data['subscriber'];
+        $sql->stripe_plan = $data['plan'];
         $sql->ends_at = Carbon::now()->add(1, 'month');
-        $sql->payment_gateway = 'PayPal';
         $sql->save();
 
         // Insert Transaction
@@ -133,8 +133,6 @@ class PayPalController extends Controller
         $txn->earning_net_admin = $earningNetAdmin;
         $txn->payment_gateway = 'PayPal';
         $txn->save();
-
-
 
         //Add Earnings to User
         User::find($data['id'])->increment('balance', $earningNetUser);

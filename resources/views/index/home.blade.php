@@ -156,11 +156,60 @@
   </div>
 @endif
 
+@if ($settings->earnings_simulator == 'on')
+<!-- Earnings simulator -->
+<div class="section py-5 py-large">
+  <div class="btn-block text-center">
+    <h1 class="font-weight-light">{{trans('general.earnings_simulator')}}</h1>
+    <p>
+      {{trans('general.earnings_simulator_subtitle')}}
+    </p>
+  </div>
+  <div class="container mb-4">
+    <div class="row">
+      <div class="col-md-6">
+        <label for="rangeNumberFollowers" class="w-100">
+          {{ __('general.number_followers') }}
+          <i class="feather icon-facebook mr-1"></i>
+          <i class="feather icon-twitter mr-1"></i>
+          <i class="feather icon-instagram"></i>
+          <span class="float-right">
+            #<span id="numberFollowers">1000</span>
+          </span>
+        </label>
+        <input type="range" class="custom-range" value="0" min="1000" max="1000000" id="rangeNumberFollowers" onInput="$('#numberFollowers').html($(this).val())">
+      </div>
+
+      <div class="col-md-6">
+        <label for="rangeMonthlySubscription" class="w-100">{{ __('general.monthly_subscription_price') }}
+          <span class="float-right">
+            {{ $settings->currency_position == 'left' ? $settings->currency_symbol : null }}<span id="monthlySubscription">{{ $settings->min_subscription_amount }}</span>{{ $settings->currency_position == 'right' ? $settings->currency_symbol : null }}
+        </span>
+        </label>
+        <input type="range" class="custom-range" value="0" onInput="$('#monthlySubscription').html($(this).val())" min="{{ $settings->min_subscription_amount }}" max="{{ $settings->max_subscription_amount }}" id="rangeMonthlySubscription">
+      </div>
+
+      <div class="col-md-12 text-center mt-4">
+        <h3 class="font-weight-light">{{trans('general.earnings_simulator_subtitle_2')}}
+          <span class="font-weight-bold">{{ $settings->currency_position == 'left' ? $settings->currency_symbol : null }}<span id="estimatedEarn"></span>{{ $settings->currency_position == 'right' ? $settings->currency_symbol : null }}</span>
+          {{ __('general.per_month') }}*</h3>
+        <p class="mb-1">
+          * {{trans('general.earnings_simulator_subtitle_3')}}
+        </p>
+        <small class="w-100 d-block">* {{trans('general.include_platform_fee', ['percentage' => $settings->fee_commission])}}</small>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
+
     <div class="jumbotron m-0 text-white text-center bg-gradient">
       <div class="container position-relative">
         <h1>{{trans('general.head_title_bottom')}}</h1>
         <p>{{trans('general.head_title_bottom_desc')}}</p>
-        <p><a class="btn btn-outline-light btn-main p-3 px-5 btn-lg" href="{{ $settings->registration_active == '1' ? url('signup') : url('login')}}" role="button">
+        <p>
+          <a href="{{url('creators')}}" class="btn btn-lg btn-primary btn-w-mb px-4 mr-2" role="button">{{trans('general.explore')}}</a>
+          <a class="btn btn-lg btn-main btn-outline-light btn-w px-4" href="{{ $settings->registration_active == '1' ? url('signup') : url('login')}}" role="button">
           {{trans('general.getting_started')}} <small class="pl-1"><i class="fa fa-long-arrow-alt-right"></i></small>
         </a>
         </p>
@@ -171,8 +220,38 @@
 
 @section('javascript')
 
+  @if ($settings->earnings_simulator == 'on')
+  <script type="text/javascript">
+
+   $valueDefault = 95;
+   $('#estimatedEarn').html($valueDefault.toLocaleString('{{ config('app.locale') }}', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+   $("#rangeNumberFollowers, #rangeMonthlySubscription").on('change', function() {
+
+     @if($settings->currency_code == 'JPY')
+      $decimal = 0;
+     @else
+      $decimal = 2;
+     @endif
+
+     var fee = {{ $settings->fee_commission }};
+     var monthlySubscription = parseFloat($('#rangeMonthlySubscription').val());
+     var numberFollowers = parseFloat($('#rangeNumberFollowers').val());
+
+     var estimatedFollowers = (numberFollowers * 5 / 100)
+     var followersAndPrice = (estimatedFollowers * monthlySubscription);
+     var percentageAvgFollowers = (followersAndPrice * fee / 100);
+     var earnAvg = followersAndPrice - percentageAvgFollowers;
+
+     $('#estimatedEarn').html(earnAvg.toLocaleString('{{ config('app.locale') }}', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+   });
+  </script>
+@endif
+
 @if (session('success_verify'))
   <script type="text/javascript">
+
 	swal({
 		title: "{{ trans('general.welcome') }}",
 		text: "{{ trans('users.account_validated') }}",

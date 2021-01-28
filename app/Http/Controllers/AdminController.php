@@ -21,6 +21,7 @@ use App\Models\Reports;
 use App\Models\VerificationRequests;
 use App\Helper;
 use Carbon\Carbon;
+use App\Models\Deposits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -73,7 +74,7 @@ class AdminController extends Controller
 			->whereApproved('1')
 	 	 ->sum('earning_net_admin');
 
-		return view('admin.dashboard', [
+		 		return view('admin.dashboard', [
 			'users' => $users,
 			'total_raised_funds' => $total_raised_funds,
 			'total_subscriptions' => $total_subscriptions,
@@ -120,7 +121,7 @@ class AdminController extends Controller
     $user = User::findOrFail($id);
 		$input = $request->all();
 
-	if(!empty($request->password)){
+	if (! empty($request->password)){
 		$rules = array(
 			'name' => 'required|min:3|max:25',
 			'email'     => 'required|email|unique:users,email,'.$id,
@@ -132,7 +133,7 @@ class AdminController extends Controller
 	} else {
 		$rules = array(
 			'name' => 'required|min:3|max:25',
-			'email'     => 'required|email|unique:users,email,'.$id,
+			'email' => 'required|email|unique:users,email,'.$id,
 			);
 
 			$password = $user->password;
@@ -140,23 +141,25 @@ class AdminController extends Controller
 
 	   $this->validate($request,$rules);
 
-		 if($request->featured == 'yes' && $user->featured_date == '0000-00-00 00:00:00') {
+		 if ($request->featured == 'yes' && $user->featured_date == '0000-00-00 00:00:00') {
 			 $featured_date = Carbon::now();
 		 } else {
 			 $featured_date = $user->featured_date;
 		 }
 
-		 if($request->featured == 'no' && $user->featured_date != '0000-00-00 00:00:00') {
+		 if ($request->featured == 'no' && $user->featured_date != '0000-00-00 00:00:00') {
 			 $featured_date = '0000-00-00 00:00:00';
 		 }
 
 	  $user->name = $request->name;
 	  $user->email = $request->email;
+		$user->verified_id = $request->verified;
+		$user->status = $request->status;
 	  $user->role = $request->role;
 	  $user->password = $password;
 		$user->featured = $request->featured;
 		$user->featured_date = $featured_date;
-      $user->save();
+    $user->save();
 
     \Session::flash('success_message', trans('admin.success_update'));
 
@@ -208,6 +211,10 @@ class AdminController extends Controller
 		$sql->account_verification = $request->account_verification;
 		$sql->show_counter = $request->show_counter;
 		$sql->widget_creators_featured = $request->widget_creators_featured;
+		$sql->requests_verify_account = $request->requests_verify_account;
+		$sql->hide_admin_profile = $request->hide_admin_profile;
+		$sql->earnings_simulator = $request->earnings_simulator;
+		$sql->watermark = $request->watermark;
 		$sql->save();
 
 		// App Name
@@ -371,9 +378,15 @@ class AdminController extends Controller
 		$sql->currency_position = $request->currency_position;
 		$sql->min_subscription_amount   = $request->min_subscription_amount;
 		$sql->max_subscription_amount   = $request->max_subscription_amount;
+		$sql->min_tip_amount   = $request->min_tip_amount;
+		$sql->max_tip_amount   = $request->max_tip_amount;
+		$sql->min_deposits_amount   = $request->min_deposits_amount;
+		$sql->max_deposits_amount   = $request->max_deposits_amount;
 		$sql->fee_commission       = $request->fee_commission;
 		$sql->amount_min_withdrawal    = $request->amount_min_withdrawal;
 		$sql->days_process_withdrawals = $request->days_process_withdrawals;
+		$sql->payout_method_paypal = $request->payout_method_paypal;
+		$sql->payout_method_bank = $request->payout_method_bank;
 		$sql->decimal_format           = $request->decimal_format;
 
 		$sql->save();
@@ -600,6 +613,8 @@ else {
     $fileVideo   = $sql->video;
     $pathMusic   = config('path.music');
     $fileMusic   = $sql->music;
+		$pathFile   = config('path.files');
+    $fileZip    = $sql->file;
 
 		// Image
     Storage::delete($path.$file);
@@ -607,6 +622,8 @@ else {
     Storage::delete($pathVideo.$fileVideo);
     // Music
     Storage::delete($pathMusic.$fileMusic);
+		// File
+    Storage::delete($pathFile.$fileZip);
 
 		// Delete Reports
 		$reports = Reports::where('report_id', $request->id)->where('type','update')->get();
@@ -697,6 +714,11 @@ else {
           'logo'   => 'mimes:png',
 					'logo_blue'   => 'mimes:png',
 					'favicon'   => 'mimes:png',
+					'color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+				  'navbar_background_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+				  'navbar_text_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+				  'footer_background_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+				  'footer_text_color' => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/']
         );
 
 		$this->validate($request, $rules);
@@ -892,8 +914,17 @@ else {
 			$this->settings->save();
 		} // HasFile
 
-		// Update Color Default
-		$this->settings->whereId(1)->update(['color_default' => $request->get('color')]);
+		// Update Color Default, and Button style
+		$this->settings->whereId(1)
+			->update([
+				'home_style' => $request->get('home_style'),
+				'color_default' => $request->get('color'),
+				'navbar_background_color' => $request->get('navbar_background_color'),
+				'navbar_text_color' => $request->get('navbar_text_color'),
+				'footer_background_color' => $request->get('footer_background_color'),
+				'footer_text_color' => $request->get('footer_text_color'),
+				'button_style' => $request->get('button_style')
+			]);
 
 
 		\Artisan::call('cache:clear');
@@ -1022,6 +1053,8 @@ else {
 				'MAIL_FROM_ADDRESS' => 'required'
 			]);
 
+		$request->MAIL_ENCRYPTION = strtolower($request->MAIL_ENCRYPTION);
+
 		$this->settings->email_no_reply = $request->MAIL_FROM_ADDRESS;
 		$this->settings->save();
 
@@ -1039,6 +1072,7 @@ else {
 
 		$this->settings->facebook_login = $request->facebook_login;
 		$this->settings->google_login = $request->google_login;
+		$this->settings->twitter_login = $request->twitter_login;
 		$this->settings->save();
 
 		foreach ($request->except(['_token']) as $key => $value) {
@@ -1230,5 +1264,113 @@ else {
 		return redirect('panel/admin/blog')->withSuccessMessage(trans('admin.blog_deleted'));
 
 	}//<--- END METHOD
+
+	public function resendConfirmationEmail($id)
+	{
+		$user =  User::whereId($id)->whereStatus('pending')->firstOrFail();
+
+		$confirmation_code = Str::random(100);
+
+		//send verification mail to user
+	 $_username      = $user->username;
+	 $_email_user    = $user->email;
+	 $_title_site    = $this->settings->title;
+	 $_email_noreply = $this->settings->email_no_reply;
+
+	 Mail::send('emails.verify', array('confirmation_code' => $confirmation_code),
+	 function($message) use (
+			 $_username,
+			 $_email_user,
+			 $_title_site,
+			 $_email_noreply
+	 ) {
+							$message->from($_email_noreply, $_title_site);
+							$message->subject(trans('users.title_email_verify'));
+							$message->to($_email_user,$_username);
+					});
+
+		\Session::flash('success_message', trans('general.send_success'));
+
+    return redirect('panel/admin/members');
+
+	}
+
+	public function deposits()
+	{
+		$data = Deposits::orderBy('id', 'desc')->paginate(30);
+		return view('admin.deposits')->withData($data);
+	}//<--- End Method
+
+	public function depositsView($id)
+	{
+		$data = Deposits::findOrFail($id);
+		return view('admin.deposits-view')->withData($data);
+	}//<--- End Method
+
+	public function approveDeposits(Request $request)
+	{
+		$sql = Deposits::findOrFail($request->id);
+		$sql->status = 'active';
+		$sql->save();
+
+		//<------ Send Email to User ---------->>>
+		$sender       = $this->settings->email_no_reply;
+		$titleSite    = $this->settings->title;
+		$fullNameUser = $sql->user()->name;
+		$emailUser   =  $sql->user()->email;
+
+		Mail::send('emails.transfer_verification', array(
+			'body' => trans('general.info_transfer_verified', ['amount' => Helper::amountFormat($sql->amount)]),
+			'type' => 'approve',
+			'title_site' => $titleSite,
+			'fullname'   => $fullNameUser
+		),
+			function($message) use ($sender, $fullNameUser, $titleSite, $emailUser)
+				{
+						$message->from($sender, $titleSite)
+										->to($emailUser, $fullNameUser)
+										->subject(trans('general.transfer_verified').' - '.$titleSite);
+				});
+			//<------ End Send Email to User ---------->>>
+
+			//Add Funds to User
+      User::find($sql->user()->id)->increment('wallet', $sql->amount);
+
+		return redirect('panel/admin/deposits');
+	}//<--- END METHOD
+
+	public function deleteDeposits(Request $request)
+	{
+		$path = config('path.admin');
+	  $sql = Deposits::findOrFail($request->id);
+
+		// Delete Image
+		Storage::delete($path.$sql->screenshot_transfer);
+
+      $sql->delete();
+
+			//<------ Send Email to User ---------->>>
+			$sender       = $this->settings->email_no_reply;
+			$titleSite    = $this->settings->title;
+			$fullNameUser = $sql->user()->name;
+			$emailUser   =  $sql->user()->email;
+
+			Mail::send('emails.transfer_verification', array(
+				'body' => trans('general.info_transfer_not_verified', ['amount' => Helper::amountFormat($sql->amount)]),
+				'type' => 'not_approve',
+				'title_site' => $titleSite,
+				'fullname'   => $fullNameUser
+			),
+				function($message) use ($sender, $fullNameUser, $titleSite, $emailUser)
+					{
+							$message->from($sender, $titleSite)
+											->to($emailUser, $fullNameUser)
+											->subject(trans('general.transfer_not_verified').' - '.$titleSite);
+					});
+				//<------ End Send Email to User ---------->>>
+
+      return redirect('panel/admin/deposits');
+
+	}//<--- End Method
 
 }// End Class

@@ -7,7 +7,7 @@
 
 	var style = {
 		base: {
-			color: '#32325d',
+			color: colorStripe,
 			fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
 			fontSmoothing: 'antialiased',
 			fontSize: '16px',
@@ -54,7 +54,7 @@ button.find('i').addClass('spinner-border spinner-border-sm align-middle mr-1');
 			clientSecret, {
 					payment_method: {
 							card: cardElement,
-							billing_details: { name: '{{ auth()->user()->name }}' }
+							billing_details: { name: full_name_user }
 					}
 			}
 	);

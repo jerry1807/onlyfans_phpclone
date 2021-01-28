@@ -15,7 +15,9 @@
       <div class="row">
         <div class="col-md-8 second">
 
+        @if (auth()->user()->verified_id == 'yes')
           @include('includes.form-post')
+        @endif
 
           @if($updates->total() != 0)
 
@@ -46,13 +48,15 @@
             <i class="fa fa-bars myicon-right"></i> {{trans('general.menu')}}
           </button>
 
-          <div class="navbar-collapse collapse d-lg-block" id="navbarUserHome">
+          <div class="navbar-collapse collapse d-lg-block sticky-top" id="navbarUserHome">
 
             @if ($users->total() != 0)
                 @include('includes.explore_creators')
             @endif
 
-               @include('includes.footer-tiny')
+            <div class="d-lg-block d-none">
+              @include('includes.footer-tiny')
+            </div>
 
          </div><!-- navbarUserHome -->
         </div><!-- col-md -->

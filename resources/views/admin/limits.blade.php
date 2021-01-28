@@ -88,6 +88,8 @@
             						  	<option @if( $settings->file_size_allowed_verify_account == 5120 ) selected="selected" @endif value="5120">5 MB</option>
             						  	<option @if( $settings->file_size_allowed_verify_account == 10240 ) selected="selected" @endif value="10240">10 MB</option>
                             <option @if( $settings->file_size_allowed_verify_account == 15360 ) selected="selected" @endif value="15360">15 MB</option>
+                              <option @if( $settings->file_size_allowed_verify_account == 20480 ) selected="selected" @endif value="20480">20 MB</option>
+                                <option @if( $settings->file_size_allowed_verify_account == 30720 ) selected="selected" @endif value="30720">30 MB</option>
                           </select>
                           <span class="help-block ">{{ trans('admin.upload_max_filesize_info') }} <strong><?php echo str_replace('M', 'MB', ini_get('upload_max_filesize')) ?></strong></span>
                       </div>

@@ -15,6 +15,7 @@ use App\Models\AdminSettings;
 use App\Models\Subscriptions;
 use App\Models\Updates;
 use App\Models\PaymentGateways;
+use App\Models\Languages;
 
 class UpgradeController extends Controller {
 
@@ -68,14 +69,17 @@ class UpgradeController extends Controller {
 		$PUBLIC_CSS = public_path('css').$DS;
 		$PUBLIC_IMG = public_path('img').$DS;
 		$PUBLIC_IMG_ICONS = public_path('img'.$DS.'icons').$DS;
+		$PUBLIC_FONTS = public_path('webfonts').$DS;
 
 		$VIEWS = resource_path('views').$DS;
 		$VIEWS_ADMIN = resource_path('views'. $DS . 'admin').$DS;
 		$VIEWS_AJAX = resource_path('views'. $DS . 'ajax').$DS;
 		$VIEWS_AUTH = resource_path('views'. $DS . 'auth').$DS;
+		$VIEWS_AUTH_PASS = resource_path('views'. $DS . 'auth'.$DS.'passwords').$DS;
 		$VIEWS_EMAILS = resource_path('views'. $DS . 'emails').$DS;
 		$VIEWS_ERRORS = resource_path('views'. $DS . 'errors').$DS;
 		$VIEWS_INCLUDES = resource_path('views'. $DS . 'includes').$DS;
+		$VIEWS_INSTALL = resource_path('views'. $DS . 'installer').$DS;
 		$VIEWS_INDEX = resource_path('views'. $DS . 'index').$DS;
 		$VIEWS_LAYOUTS = resource_path('views'. $DS . 'layouts').$DS;
 		$VIEWS_PAGES = resource_path('views'. $DS . 'pages').$DS;
@@ -473,7 +477,7 @@ class UpgradeController extends Controller {
 			$oldVersion = $this->settings->version;
 			$path       = "v$version/";
 			$pathAdmin  = "v$version/admin/";
-			$copy       = false;
+			$copy       = true;
 
 			if ($this->settings->version == $version) {
 				return redirect('/');
@@ -524,6 +528,390 @@ class UpgradeController extends Controller {
 
 		}
 		//<<---- End Version 1.5 ----->>
+
+		if ($version == '1.6') {
+
+			//============ Starting moving files...
+			$oldVersion = $this->settings->version;
+			$path       = "v$version/";
+			$pathAdmin  = "v$version/admin/";
+			$copy       = true;
+
+			if ($this->settings->version == $version) {
+				return redirect('/');
+			}
+
+			if ($this->settings->version != $oldVersion || !$this->settings->version) {
+				return "<h2 style='text-align:center; margin-top: 30px; font-family: Arial, san-serif;color: #ff0000;'>Error! you must update from version $oldVersion</h2>";
+			}
+
+			if (! Schema::hasColumn('users',
+					'gender',
+					'birthdate',
+					'allow_download_files',
+					'language'
+				)) {
+						Schema::table('users', function($table) {
+							$table->string('gender', 50);
+ 						 	$table->string('birthdate', 30);
+						  $table->enum('allow_download_files', ['no', 'yes'])->default('no');
+							$table->string('language', 10);
+				});
+			}
+
+			if (! Schema::hasColumn('transactions', 'type')) {
+						Schema::table('transactions', function($table) {
+						 $table->enum('type', ['subscription', 'tip', 'ppv'])->default('subscription');
+				});
+			}
+
+			if (! Schema::hasColumn('admin_settings',
+					'payout_method_paypal',
+					 'payout_method_bank',
+					 'min_tip_amount',
+					 'max_tip_amount',
+					 'min_ppv_amount',
+					 'max_ppv_amount',
+					 'min_deposits_amount',
+					 'max_deposits_amount',
+					 'button_style',
+					 'twitter_login',
+					 'hide_admin_profile',
+					 'requests_verify_account',
+					 'navbar_background_color',
+					 'navbar_text_color',
+					 'footer_background_color',
+					 'footer_text_color'
+
+					 )
+					) {
+						Schema::table('admin_settings', function($table) {
+						 $table->enum('payout_method_paypal', ['on', 'off'])->default('on');
+						 $table->enum('payout_method_bank', ['on', 'off'])->default('on');
+						 $table->unsignedInteger('min_tip_amount');
+						 $table->unsignedInteger('max_tip_amount');
+						 $table->unsignedInteger('min_ppv_amount');
+						 $table->unsignedInteger('max_ppv_amount');
+						 $table->unsignedInteger('min_deposits_amount');
+						 $table->unsignedInteger('max_deposits_amount');
+						 $table->enum('button_style', ['rounded', 'normal'])->default('rounded');
+						 $table->enum('twitter_login', ['on', 'off'])->default('off');
+						 $table->enum('hide_admin_profile', ['on', 'off'])->default('off');
+						 $table->enum('requests_verify_account', ['on', 'off'])->default('on');
+						 $table->string('navbar_background_color', 30);
+						 $table->string('navbar_text_color', 30);
+						 $table->string('footer_background_color', 30);
+						 $table->string('footer_text_color', 30);
+
+				});
+			}
+
+			file_put_contents(
+					'.env',
+					"\nTWITTER_CLIENT_ID=\nTWITTER_CLIENT_SECRET=\n",
+					FILE_APPEND
+			);
+
+			$sql = new Languages();
+			$sql->name = 'Español';
+			$sql->abbreviation = 'es';
+			$sql->save();
+
+			AdminSettings::whereId(1)->update([
+						'navbar_background_color' => '#ffffff',
+						'navbar_text_color' => '#3a3a3a',
+						'footer_background_color' => '#ffffff',
+						'footer_text_color' => '#5f5f5f',
+						'min_tip_amount' => 5,
+						'max_tip_amount' => 99
+					]);
+
+			DB::statement("ALTER TABLE reports MODIFY reason ENUM('copyright', 'privacy_issue', 'violent_sexual', 'spoofing', 'spam', 'fraud', 'under_age') NOT NULL");
+
+			// Update Version
+		 $this->settings->whereId(1)->update([
+					 'version' => $version
+				 ]);
+
+				 // Clear Cache, Config and Views
+			\Artisan::call('cache:clear');
+			\Artisan::call('config:clear');
+			\Artisan::call('view:clear');
+
+			return $upgradeDone;
+
+		}
+		//<<---- End Version 1.6 ----->>
+
+		if ($version == '1.7') {
+
+			//============ Starting moving files...
+			$oldVersion = $this->settings->version;
+			$path       = "v$version/";
+			$pathAdmin  = "v$version/admin/";
+			$copy       = true;
+
+			if ($this->settings->version == $version) {
+				return redirect('/');
+			}
+
+			if ($this->settings->version != $oldVersion || ! $this->settings->version) {
+				return "<h2 style='text-align:center; margin-top: 30px; font-family: Arial, san-serif;color: #ff0000;'>Error! you must update from version $oldVersion</h2>";
+			}
+
+			//============== Files Affected ================//
+			$file5 = 'UserController.php';
+			$file6 = 'RegisterController.php';
+			$file18 = 'home-login.blade.php';
+			$file29 = 'app.blade.php';
+			$file30 = 'password.blade.php';
+			$file31 = 'edit_my_page.blade.php';
+			$file32 = 'invoice.blade.php';
+
+
+			//============== Moving Files ================//
+			$this->moveFile($path.$file5, $CONTROLLERS.$file5, $copy);
+			$this->moveFile($path.$file6, $CONTROLLERS_AUTH.$file6, $copy);
+			$this->moveFile($path.$file18, $VIEWS_INDEX.$file18, $copy);
+			$this->moveFile($path.$file29, $VIEWS_LAYOUTS.$file29, $copy);
+			$this->moveFile($path.$file30, $VIEWS_USERS.$file30, $copy);
+			$this->moveFile($path.$file31, $VIEWS_USERS.$file31, $copy);
+			$this->moveFile($path.$file32, $VIEWS_USERS.$file32, $copy);
+
+			// Copy UpgradeController
+			if ($copy == true) {
+				$this->moveFile($path.'UpgradeController.php', $CONTROLLERS.'UpgradeController.php', $copy);
+		 }
+
+			// Delete folder
+			if ($copy == false) {
+			 File::deleteDirectory("v$version");
+		 }
+
+			// Update Version
+		 $this->settings->whereId(1)->update([
+					 'version' => $version
+				 ]);
+
+				 // Clear Cache, Config and Views
+			\Artisan::call('cache:clear');
+			\Artisan::call('config:clear');
+			\Artisan::call('view:clear');
+
+			return $upgradeDone;
+
+		}
+		//<<---- End Version 1.7 ----->>
+
+		if ($version == '1.8') {
+
+			//============ Starting moving files...
+			$oldVersion = '1.6';
+			$path       = "v$version/";
+			$pathAdmin  = "v$version/admin/";
+			$copy       = false;
+
+			if ($this->settings->version == $version) {
+				return redirect('/');
+			}
+
+			if ($this->settings->version != $oldVersion && $this->settings->version != '1.7' || ! $this->settings->version) {
+				return "<h2 style='text-align:center; margin-top: 30px; font-family: Arial, san-serif;color: #ff0000;'>Error! you must update from version $oldVersion</h2>";
+			}
+
+			if (! Schema::hasColumn('payment_gateways', 'subscription')) {
+						Schema::table('payment_gateways', function($table) {
+						 $table->enum('subscription', ['yes', 'no'])->default('yes');
+				});
+			}
+			
+			DB::table('payment_gateways')->insert([
+				[
+					'name' => 'Bank Transfer',
+					'type' => 'bank',
+					'enabled' => '0',
+					'fee' => 0.0,
+					'fee_cents' => 0.00,
+					'email' => '',
+					'key' => '',
+					'key_secret' => '',
+					'bank_info' => '',
+					'recurrent' => 'no',
+					'logo' => '',
+					'webhook_secret' => '',
+					'subscription' => 'no',
+					'token' => str_random(150),
+			]
+	]);
+
+		if (! Schema::hasColumn('admin_settings', 'announcements', 'preloading', 'preloading_image', 'watermark')) {
+						Schema::table('admin_settings', function($table) {
+						 $table->text('announcements');
+						 $table->enum('preloading', ['on', 'off'])->default('off');
+						 $table->string('preloading_image', 100);
+						 $table->enum('watermark', ['on', 'off'])->default('on');
+						 $table->enum('earnings_simulator', ['on', 'off'])->default('on');
+				});
+			}
+
+			if (! Schema::hasColumn('users', 'free_subscription', 'wallet')) {
+						Schema::table('users', function($table) {
+						 $table->enum('free_subscription', ['yes', 'no'])->default('no');
+						 $table->decimal('wallet', 10, 2);
+						 $table->string('tiktok', 200);
+						 $table->string('snapchat', 200);
+				});
+			}
+
+			if (! Schema::hasColumn('updates', 'price', 'youtube', 'vimeo', 'file_name', 'file_size')) {
+						Schema::table('updates', function($table) {
+						 $table->decimal('price', 10, 2);
+						 $table->string('video_embed', 200);
+						 $table->string('file_name', 255);
+						 $table->string('file_size', 50);
+				});
+			}
+
+			if (! Schema::hasColumn('subscriptions', 'free')) {
+						Schema::table('subscriptions', function($table) {
+						 $table->enum('free', ['yes', 'no'])->default('no');
+				});
+			}
+
+			if (! Schema::hasColumn('messages', 'price', 'tip', 'tip_amount')) {
+						Schema::table('messages', function($table) {
+						 $table->decimal('price', 10, 2);
+						 $table->enum('tip', ['yes', 'no'])->default('no');
+						 $table->unsignedInteger('tip_amount');
+				});
+			}
+
+			// Create table Deposits
+			if (! Schema::hasTable('deposits')) {
+
+					Schema::create('deposits', function ($table) {
+
+					$table->engine = 'InnoDB';
+					$table->increments('id');
+					$table->unsignedInteger('user_id');
+					$table->string('txn_id', 200);
+					$table->unsignedInteger('amount');
+					$table->string('payment_gateway', 100);
+					$table->timestamp('date');
+					$table->enum('status', ['active', 'pending'])->default('active');
+					$table->string('screenshot_transfer', 100);
+			});
+		}// <<< --- Create table Deposits
+
+			//============== Files Affected ================//
+			$files = [
+				'UpdatesController.php' => $CONTROLLERS,
+				'PayPalController.php' => $CONTROLLERS,
+				'AdminController.php' => $CONTROLLERS,
+				'HomeController.php' => $CONTROLLERS,
+				'MessagesController.php' => $CONTROLLERS,
+				'SubscriptionsController.php' => $CONTROLLERS,
+				'StripeController.php' => $CONTROLLERS,
+				'AddFundsController.php' => $CONTROLLERS,
+				'UserController.php' => $CONTROLLERS,
+				'InstallScriptController.php' => $CONTROLLERS,
+				'Helper.php' => $APP,
+				'Subscriptions.php' => $MODELS,
+				'app.blade.php' => $VIEWS_LAYOUTS,
+				'javascript_general.blade.php' => $VIEWS_INCLUDES,
+				'home-login.blade.php' => $VIEWS_INDEX,
+				'register.blade.php' => $VIEWS_AUTH,
+				'notifications.blade.php' => $VIEWS_USERS,
+				'my_payments.blade.php' => $VIEWS_USERS,
+				'navbar.blade.php' => $VIEWS_INCLUDES,
+				'edit-update.blade.php' => $VIEWS_USERS,
+				'listing-creators.blade.php' => $VIEWS_INCLUDES,
+				'explore_creators.blade.php' => $VIEWS_INCLUDES,
+				'listing-explore-creators.blade.php' => $VIEWS_INCLUDES,
+				'updates.blade.php' => $VIEWS_INCLUDES,
+				'footer-tiny.blade.php' => $VIEWS_INCLUDES,
+				'messages-chat.blade.php' => $VIEWS_INCLUDES,
+				'footer.blade.php' => $VIEWS_INCLUDES,
+				'profile.blade.php' => $VIEWS_USERS,
+				'cards-settings.blade.php' => $VIEWS_INCLUDES,
+				'subscription.blade.php' => $VIEWS_INCLUDES,
+				'messages-inbox.blade.php' => $VIEWS_INCLUDES,
+				'css_general.blade.php' => $VIEWS_INCLUDES,
+				'invoice.blade.php' => $VIEWS_USERS,
+				'my_subscriptions.blade.php' => $VIEWS_USERS,
+				'my_subscribers.blade.php' => $VIEWS_USERS,
+				'dashboard.blade.php' => $VIEWS_USERS,
+				'categories.blade.php' => $VIEWS_INDEX,
+				'email.blade.php' => $VIEWS_AUTH_PASS,
+				'payout_method.blade.php' => $VIEWS_USERS,
+				'sitemaps.blade.php' => $VIEWS_INDEX,
+				'home-session.blade.php' => $VIEWS_INDEX,
+				'form-post.blade.php' => $VIEWS_INCLUDES,
+				'edit_my_page.blade.php' => $VIEWS_USERS,
+				'home.blade.php' => $VIEWS_INDEX,
+				'wallet.blade.php' => $VIEWS_USERS,
+				'withdrawals.blade.php' => $VIEWS_USERS,
+				'messages-show.blade.php' => $VIEWS_USERS,
+				'requirements.blade.php' => $VIEWS_INSTALL,
+				'transfer_verification.blade.php' => $VIEWS_EMAILS,
+				'verify_account' => $VIEWS_USERS,
+				'web.php' => $ROUTES,
+				'arial.TTF' => $PUBLIC_FONTS,
+				'add-funds.js' => $PUBLIC_JS,
+				'app-functions.js' => $PUBLIC_JS,
+				'messages.js' => $PUBLIC_JS,
+				'payment.js' => $PUBLIC_JS
+			];
+
+			$filesAdmin = [
+				'verification.blade.php' => $VIEWS_ADMIN,
+				'transactions.blade.php' => $VIEWS_ADMIN,
+				'posts.blade.php' => $VIEWS_ADMIN,
+				'deposits-view.blade.php' => $VIEWS_ADMIN,
+				'dashboard.blade.php' => $VIEWS_ADMIN,
+				'charts.blade.php' => $VIEWS_ADMIN,
+				'deposits.blade.php' => $VIEWS_ADMIN,
+				'members.blade.php' => $VIEWS_ADMIN,
+				'bank-transfer-settings.blade.php' => $VIEWS_ADMIN,
+				'layout.blade.php' => $VIEWS_ADMIN,
+				'settings.blade.php' => $VIEWS_ADMIN,
+				'payments-settings.blade.php' => $VIEWS_ADMIN
+			];
+
+			// Files
+			foreach ($files as $file => $root) {
+				 $this->moveFile($path.$file, $root.$file, $copy);
+			}
+
+			// Files Admin
+			foreach ($filesAdmin as $file => $root) {
+				 $this->moveFile($pathAdmin.$file, $root.$file, $copy);
+			}
+
+			// Copy UpgradeController
+			if ($copy == true) {
+				$this->moveFile($path.'UpgradeController.php', $CONTROLLERS.'UpgradeController.php', $copy);
+		 }
+
+			// Delete folder
+			if ($copy == false) {
+			 File::deleteDirectory("v$version");
+		 }
+
+			// Update Version
+		 $this->settings->whereId(1)->update([
+					 'version' => $version
+				 ]);
+
+				 // Clear Cache, Config and Views
+			\Artisan::call('cache:clear');
+			\Artisan::call('config:clear');
+			\Artisan::call('view:clear');
+
+			return $upgradeDone;
+
+		}
+		//<<---- End Version 1.8 ----->>
 
 	}//<--- End Method
 

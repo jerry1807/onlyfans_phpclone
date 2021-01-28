@@ -91,12 +91,25 @@
               <input type="hidden" name="id_user" id="id_user" value="{{$user->id}}">
               <input type="hidden" name="_token" value="{{ csrf_token() }}">
               <input type="file" name="photo" id="file" accept="image/*,video/mp4,video/x-m4v,video/quicktime,audio/mp3" style="visibility: hidden;">
+              <input type="file" name="zip" id="zipFile" accept="application/x-zip-compressed" class="visibility-hidden">
 
               <div class="media align-items-center">
 
-                <div class="mr-2" style="font-size:25px">
+                <div class="mr-3" style="font-size:25px">
                   <a href="javascript:;" onclick="$('#file').trigger('click')"><i class="far fa-image"></i></a>
                 </div>
+
+                <div class="mr-3" style="font-size:23px">
+                  <a href="javascript:;" title="{{trans('general.upload_file_zip')}}" onclick="$('#zipFile').trigger('click')"><i class="far fa-file-archive"></i></a>
+                </div>
+
+              @if ($user->verified_id == 'yes')
+              <div class="mr-2" style="font-size:23px">
+                <a href="javascript:void(0);" data-toggle="modal" title="{{trans('general.tip')}}" data-target="#tipForm" data-cover="{{Storage::url(config('path.cover').$user->cover)}}" data-avatar="{{Storage::url(config('path.avatar').$user->avatar)}}" data-name="{{$user->name}}" data-userid="{{$user->id}}">
+                  <i class="fa fa-donate mr-1 mr-lg-0"></i>
+                </a>
+              </div>
+              @endif
 
                 <div class="w-100 mr-2">
                   <textarea class="form-control textareaAutoSize border-0" data-post-length="{{$settings->update_length}}" rows="1" placeholder="{{trans('general.write_something')}}" id="message" name="message"></textarea>

@@ -63,6 +63,12 @@
         				$linkDestination = url($key->usernameAuthor, 'post').'/'.$key->id;
                 $text_post       = Str::limit($key->description, 50, '...');
         				break;
+
+              case 5:
+        				$action          = trans('general.he_sent_you_tip');
+        				$linkDestination = url('my/payments/received');
+                $text_post       = trans('general.tip');
+        				break;
         		}
 
         ?>

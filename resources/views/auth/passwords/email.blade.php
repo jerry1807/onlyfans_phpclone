@@ -2,18 +2,24 @@
 
 @section('title') {{trans('auth.password_recover')}} -@endsection
 
+@section('css')
+  <script type="text/javascript">
+      var error_scrollelement = {{ count($errors) > 0 ? 'true' : 'false' }};
+  </script>
+@endsection
+
 @section('content')
   <div class="jumbotron home m-0 bg-gradient">
     <div class="container pt-lg-md">
       <div class="row justify-content-center">
         <div class="col-lg-5">
-          <div class="card bg-light shadow border-0">
-            <div class="card-header bg-white py-4">
-              <h4 class="text-center mb-0 font-weight-bold">
+          <div class="card bg-white shadow border-0">
+
+              <h4 class="text-center mb-0 font-weight-bold pt-4 px-4">
                 {{trans('auth.password_recover')}}
               </h4>
-              <small class="btn-block text-center mt-2">{{ trans('auth.recover_pass_subtitle') }}</small>
-            </div>
+              <small class="btn-block text-center mt-2 px-4">{{ trans('auth.recover_pass_subtitle') }}</small>
+
             <div class="card-body px-lg-5 py-lg-5">
               @if (session('status'))
                       <div class="alert alert-success">
@@ -53,13 +59,8 @@
           </div>
           <div class="row mt-3">
             <div class="col-6">
-              <a href="{{url('login')}}" class="text-light">
-                <small><i class="fas fa-arrow-left"></i> {{trans('auth.back_login')}}</small>
-              </a>
-            </div>
-            <div class="col-6 text-right">
-              <a href="{{url('signup')}}" class="text-light">
-                <small>{{trans('auth.not_have_account')}}</small>
+              <a href="{{ url()->previous() }}" class="text-light">
+                <small><i class="fas fa-arrow-left"></i> {{trans('general.go_back')}}</small>
               </a>
             </div>
           </div>
@@ -67,12 +68,4 @@
       </div>
     </div>
   </div>
-@endsection
-
-@section('javascript')
-<script type="text/javascript">
-	@if (count($errors) > 0)
-    	scrollElement('#dangerAlert');
-    @endif
-</script>
 @endsection

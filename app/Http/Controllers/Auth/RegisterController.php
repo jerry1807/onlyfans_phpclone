@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use Mail;
 use Validator;
+use App\Helper;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -75,11 +76,9 @@ class RegisterController extends Controller
 
         return Validator::make($data, [
             'name' => 'required|string|max:100',
-            'username'  => 'required|min:3|max:15|ascii_only|alpha_dash|letters|unique:users|unique:reserved,name',
             'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|min:6',
             'agree_gdpr' => 'required',
-            'countries_id' => 'required',
             'g-recaptcha-response' => 'required_if:_captcha,==,on|captcha'
         ], $messages);
     }
@@ -91,7 +90,7 @@ class RegisterController extends Controller
     {
       $settings = AdminSettings::first();
 
-  		if($settings->registration_active == '1')	{
+  		if ($settings->registration_active == '1' && $settings->home_style == 0)	{
   			return view('auth.register');
   		} else {
   			return redirect('/');
@@ -116,7 +115,7 @@ class RegisterController extends Controller
 			$status = 'pending';
 
 			//send verification mail to user
-		 $_username      = $data['username'];
+		 $_username      = $data['name'];
 	   $_email_user    = $data['email'];
 		 $_title_site    = $settings->title;
 		 $_email_noreply = $settings->email_no_reply;
@@ -138,7 +137,7 @@ class RegisterController extends Controller
 			$status            = 'active';
 		}
 
-    if($settings->account_verification == '1') {
+    if ($settings->account_verification == '1') {
       $verify = 'no';
     } else {
       $verify = 'yes';
@@ -147,8 +146,8 @@ class RegisterController extends Controller
 		$token = Str::random(75);
 
 		return User::create([
-			'username'          => $data['username'],
-      'countries_id'      => $data['countries_id'],
+			'username'          => Helper::strRandom(),
+      'countries_id'      => $data['countries_id'] ?? '',
 			'name'              => $data['name'],
       'email'             => strtolower($data['email']),
 			'password'          => bcrypt($data['password']),
@@ -163,7 +162,8 @@ class RegisterController extends Controller
 			'token'             => $token,
       'story'             => trans('users.story_default'),
       'verified_id'       => $verify,
-      'ip'                => request()->ip()
+      'ip'                => request()->ip(),
+      'language'          => session('locale')
 		]);
     }
 
@@ -177,20 +177,32 @@ class RegisterController extends Controller
     {
 
         $settings    = AdminSettings::first();
-        $this->validator($request->all())->validate();
+        $validator = $this->validator($request->all());
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->getMessageBag()->toArray(),
+            ]);
+        }
 
         event(new Registered($user = $this->create($request->all())));
 
         // Verify Settings Admin
     		if ($settings->email_verification == '1') {
 
-          return redirect('signup')
-                ->with('status', trans('auth.check_account'));
+          return response()->json([
+              'success' => true,
+              'check_account' => trans('auth.check_account'),
+          ]);
 
         } else {
             $this->guard()->login($user);
-            return $this->registered($request, $user)
-                  ?: redirect('settings/page');
+
+            return response()->json([
+                'success' => true,
+                'url_return' => url('settings/page'),
+            ]);
         }
 
     }

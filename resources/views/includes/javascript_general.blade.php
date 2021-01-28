@@ -10,4 +10,9 @@
 @auth
 <script src="https://js.stripe.com/v3/"></script>
 <script src='https://checkout.razorpay.com/v1/checkout.js'></script>
+@if (request()->is('my/wallet'))
+<script src="{{ asset('public/js/add-funds.js') }}"></script>
+@else
+<script src="{{ asset('public/js/payment.js') }}"></script>
+@endif
 @endauth

@@ -71,6 +71,16 @@
                       <div class="form-group">
                         <div class="input-group input-group-alternative">
                           <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-database"></i></span>
+                          </div>
+                          <input name="host" required type="text" class="form-control" value="{{old('host')}}" placeholder="Host">
+                        </div>
+                        <small class="text-muted btn-block mb-4">For example: <em>127.0.0.1</em> or <em>localhost</em></small>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="input-group input-group-alternative">
+                          <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fa fa-key"></i></span>
                           </div>
                           <input name="password" required type="password" class="form-control" placeholder="Password">
@@ -104,7 +114,7 @@
                           </div>
                           <input name="email_admin" required type="email" value="{{old('email_admin')}}" class="form-control" placeholder="Email Admin">
                         </div>
-                        <small class="text-muted btn-block mb-4">ie: no-reply@yoursite.com</small>
+                        <small class="text-muted btn-block mb-4">For Example: <em>no-reply@yoursite.com</em></small>
                       </div>
 
                       <div class="text-center">
@@ -119,4 +129,6 @@
         </div>
       </main>
   </body>
+  <script src="{{ asset('public/js/core.min.js') }}"></script>
+  <script src="{{ asset('public/js/bootstrap.bundle.min.js') }}"></script>
 </html>

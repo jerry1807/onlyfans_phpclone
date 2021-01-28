@@ -8,6 +8,6 @@ return array(
 	|--------------------------------------------------------------------------
 	|
 	*/
-	"description" => "Onlybiz is a membership platform that makes it easy for artists and creators to get paid",
-	"keywords" => "donations,support,creators,onlybiz,subscription,content",
+	"description" => "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ut tortor rutrum massa efficitur tincidunt vel nec lacus. Curabitur porta aliquet diam, eu gravida neque lacinia.",
+	"keywords" => "donations,support,creators,sponzy,subscription,content",
 );

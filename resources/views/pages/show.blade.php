@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title') {{ $response->title }} -@endsection
+@section('title') {{ Lang::has('pages.' . $response->slug) ? __('pages.' . $response->slug) : $response->title }} -@endsection
 
-  @section('description_custom'){{$response->description ? $response->description : $settings->description}}@endsection
+  @section('description_custom'){{$response->description ? $response->description : trans('seo.description')}}@endsection
   @section('keywords_custom'){{$response->keywords ? $response->keywords.',' : null}}@endsection
 
 @section('content')
@@ -10,7 +10,9 @@
     <div class="container">
       <div class="row justify-content-center text-center mb-sm">
         <div class="col-lg-12 py-5">
-          <h2 class="mb-0 font-montserrat">{{ $response->title }}</h2>
+          <h2 class="mb-0 font-montserrat">
+            {{ Lang::has('pages.' . $response->slug) ? __('pages.' . $response->slug) : $response->title }}
+          </h2>
         </div>
       </div>
       <div class="row">

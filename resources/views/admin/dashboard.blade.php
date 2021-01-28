@@ -43,7 +43,7 @@
               <div class="small-box bg-green">
                 <div class="inner">
                   <h3>{{ Helper::amountFormatDecimal($total_raised_funds) }}</h3>
-                  <p>{{ trans('admin.earnings_net') }}</p>
+                  <p>{{ trans('admin.earnings_net') }} ({{__('users.admin')}})</p>
                 </div>
                 <div class="icon">
                   <i class="iconmoon icon-Bag"></i>
@@ -88,6 +88,10 @@
         <div class="box">
           <div class="box-header with-border text-center">
           <h3 class="box-title"><i class="fa fa-bar-chart-o"></i> {{trans('general.statistics_of_the_month')}}</h3>
+        </div>
+        <div class="chart">
+          <!-- Sales Chart Canvas -->
+          <canvas id="salesChart" style="height: 280px;"></canvas>
         </div>
           <div class="box-footer">
             <div class="row">
@@ -268,5 +272,6 @@
 	<script src="{{ asset('public/plugins/jvectormap/jquery-jvectormap-1.2.2.min.js')}}" type="text/javascript"></script>
 	<script src="{{ asset('public/plugins/jvectormap/jquery-jvectormap-world-mill-en.js')}}" type="text/javascript"></script>
 	<script src="{{ asset('public/plugins/knob/jquery.knob.js')}}" type="text/javascript"></script>
+  <script src="{{ asset('public/js/Chart.min.js') }}"></script>
   <script src="{{ asset('public/admin/js/charts.js')}}" type="text/javascript"></script>
 @endsection

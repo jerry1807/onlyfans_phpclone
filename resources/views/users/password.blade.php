@@ -40,6 +40,7 @@
 
             @csrf
 
+            @if (auth()->user()->password != '')
             <div class="form-group">
                 <div class="input-group mb-4">
                   <div class="input-group-prepend">
@@ -48,6 +49,7 @@
                   <input class="form-control" name="old_password" placeholder="{{trans('general.old_password')}}" type="password" required>
                 </div>
               </div>
+              @endif
 
               <div class="form-group">
                   <div class="input-group mb-4">

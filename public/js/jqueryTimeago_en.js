@@ -42,7 +42,7 @@
         minutes: "%d minutes ago",
         hour: "1 hour ago",
         hours: "%d hours ago",
-        day: "Yesterday",
+        day: "yesterday",
         days: "%d days ago",
         month: "1 month ago",
         months: "%d months ago",

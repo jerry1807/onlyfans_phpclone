@@ -1,13 +1,19 @@
 @extends('layouts.app')
 
+@section('css')
+  <script type="text/javascript">
+      var error_scrollelement = {{ count($errors) > 0 ? 'true' : 'false' }};
+  </script>
+@endsection
+
 @section('content')
   <div class="jumbotron home m-0 bg-gradient">
     <div class="container pt-lg-md">
       <div class="row justify-content-center">
         <div class="col-lg-5">
-          <div class="card bg-light shadow border-0">
+          <div class="card bg-white shadow border-0">
 
-            <div class="card-header bg-white py-4">
+            <div class="p-4">
               <h4 class="text-center mb-0 font-weight-bold">
                 {{trans('auth.reset_password')}}
               </h4>
@@ -43,11 +49,14 @@
                 </div>
 
                 <div class="form-group">
-                  <div class="input-group input-group-alternative">
+                  <div class="input-group input-group-alternative" id="showHidePassword">
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fa fa-key"></i></span>
                     </div>
                     <input name="password" type="password" class="form-control" required placeholder="{{trans('auth.password')}}">
+                    <div class="input-group-append">
+                      <span class="input-group-text c-pointer"><i class="fa fa-eye-slash"></i></span>
+                  </div>
                   </div>
                 </div>
 
@@ -75,12 +84,4 @@
       </div>
     </div>
   </div>
-@endsection
-
-@section('javascript')
-<script type="text/javascript">
-	@if(count($errors) > 0)
-    	scrollElement('#dangerAlert');
-    @endif
-</script>
 @endsection

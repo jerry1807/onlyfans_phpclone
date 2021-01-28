@@ -7,7 +7,7 @@
     <div class="container">
       <div class="row justify-content-center text-center mb-sm">
         <div class="col-lg-8 py-5">
-          <h2 class="mb-0 font-montserrat"><i class="far fa-comment-dots mr-2"></i> {{trans('general.messages')}}</h2>
+          <h2 class="mb-0 font-montserrat"><i class="feather icon-send mr-2"></i> {{trans('general.messages')}}</h2>
           <p class="lead text-muted mt-0">{{trans('general.messages_subtitle')}}</p>
           @if ($messages->count() != 0)
           <button class="btn btn-primary btn-sm w-small-100" data-toggle="modal" data-target="#newMessageForm">

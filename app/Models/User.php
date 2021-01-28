@@ -39,7 +39,8 @@ class User extends Authenticatable
         'token',
         'story',
         'verified_id',
-        'ip'
+        'ip',
+        'language'
     ];
 
     /**
@@ -115,6 +116,11 @@ class User extends Authenticatable
       {
         return $this->belongsTo('App\Models\Categories', 'categories_id');
       }
+
+      public function verificationRequests()
+      {
+            return $this->hasMany('App\Models\VerificationRequests')->whereStatus('pending')->count();
+        }
 
       public static function notificationsCount()
       {

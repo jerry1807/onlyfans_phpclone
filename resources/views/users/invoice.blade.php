@@ -18,7 +18,7 @@
 
     <!-- AdminLTE Skins. Choose a skin from the css/skins
         folder instead of downloading all of them to reduce the load. -->
-    <link rel="shortcut icon" href="{{ URL::asset('public/img/favicon.png') }}" />
+    <link rel="shortcut icon" href="{{ url('public/img', $settings->favicon) }}" />
 
     <link href='https://fonts.googleapis.com/css?family=Montserrat:700' rel='stylesheet' type='text/css'>
 
@@ -91,7 +91,13 @@
           <tbody>
           <tr>
             <td>1</td>
-            <td>{{trans('general.subscription_desc_buy').' @'.$data->subscribed()->username}}</td>
+
+            @if ($data->type == 'subscription')
+              <td>{{trans('general.subscription_desc_buy').' @'.$data->subscribed()->username}}</td>
+            @else
+              <td>{{trans('general.single_payment').' ('.trans('general.tip').') @'.$data->subscribed()->username}}</td>
+            @endif
+
             <td>{{Helper::amountFormatDecimal($data->amount)}} {{ $settings->currency_code }}</td>
           </tr>
           </tbody>

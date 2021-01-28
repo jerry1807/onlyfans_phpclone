@@ -1,5 +1,5 @@
 <!-- FOOTER -->
-<div class="py-5 bg-white @if (Auth::check() && auth()->user()->dark_mode == 'off' || Auth::guest() ) border-top @endif">
+<div class="py-5 @if (Auth::check() && auth()->user()->dark_mode == 'off' || Auth::guest() ) footer_background_color footer_text_color @else bg-white @endif @if (Auth::check() && auth()->user()->dark_mode == 'off' && $settings->footer_background_color == '#ffffff' || Auth::guest() && $settings->footer_background_color == '#ffffff' ) border-top @endif">
 <footer class="container">
   <div class="row">
     <div class="col-md-3">
@@ -18,30 +18,30 @@
           || $settings->github != ''
           )
       <div class="w-100">
-        <span class="w-100 text-muted">{{trans('general.keep_connect_with_us')}} {{trans('general.follow_us_social')}}</span>
+        <span class="w-100">{{trans('general.keep_connect_with_us')}} {{trans('general.follow_us_social')}}</span>
         <ul class="list-inline list-social">
           @if ($settings->twitter != '')
-          <li class="list-inline-item"><a href="{{$settings->twitter}}" class="ico-social"><i class="fab fa-twitter"></i></a></li>
+          <li class="list-inline-item"><a href="{{$settings->twitter}}" target="_blank" class="ico-social"><i class="fab fa-twitter"></i></a></li>
         @endif
 
         @if ($settings->facebook != '')
-          <li class="list-inline-item"><a href="{{$settings->facebook}}" class="ico-social"><i class="fab fa-facebook"></i></a></li>
+          <li class="list-inline-item"><a href="{{$settings->facebook}}" target="_blank" class="ico-social"><i class="fab fa-facebook"></i></a></li>
           @endif
 
           @if ($settings->instagram != '')
-          <li class="list-inline-item"><a href="{{$settings->instagram}}" class="ico-social"><i class="fab fa-instagram"></i></a></li>
+          <li class="list-inline-item"><a href="{{$settings->instagram}}" target="_blank" class="ico-social"><i class="fab fa-instagram"></i></a></li>
         @endif
 
           @if ($settings->pinterest != '')
-          <li class="list-inline-item"><a href="{{$settings->pinterest}}" class="ico-social"><i class="fab fa-pinterest"></i></a></li>
+          <li class="list-inline-item"><a href="{{$settings->pinterest}}" target="_blank" class="ico-social"><i class="fab fa-pinterest"></i></a></li>
           @endif
 
           @if ($settings->youtube != '')
-          <li class="list-inline-item"><a href="{{$settings->youtube}}" class="ico-social"><i class="fab fa-youtube"></i></a></li>
+          <li class="list-inline-item"><a href="{{$settings->youtube}}" target="_blank" class="ico-social"><i class="fab fa-youtube"></i></a></li>
           @endif
 
           @if ($settings->github != '')
-          <li class="list-inline-item"><a href="{{$settings->github}}" class="ico-social"><i class="fab fa-github"></i></a></li>
+          <li class="list-inline-item"><a href="{{$settings->github}}" target="_blank" class="ico-social"><i class="fab fa-github"></i></a></li>
           @endif
         </ul>
       </div>
@@ -51,7 +51,10 @@
       <h5>@lang('general.about')</h5>
       <ul class="list-unstyled">
         @foreach (Pages::all() as $page)
-        <li><a class="link-footer" href="{{ url('/p', $page->slug) }}">{{ $page->title }}</a></li>
+        <li><a class="link-footer" href="{{ url('/p', $page->slug) }}">
+          {{ Lang::has('pages.' . $page->slug) ? __('pages.' . $page->slug) : $page->title }}
+        </a>
+      </li>
         @endforeach
         <li><a class="link-footer" href="{{ url('contact') }}">{{ trans('general.contact') }}</a></li>
         <li><a class="link-footer" href="{{ url('blog') }}">{{ trans('general.blog') }}</a></li>
@@ -62,7 +65,7 @@
       <h5>@lang('general.categories')</h5>
       <ul class="list-unstyled">
         @foreach (Categories::where('mode','on')->orderBy('name')->take(6)->get() as $category)
-        <li><a class="link-footer" href="{{ url('category', $category->slug) }}">{{ $category->name }}</a></li>
+        <li><a class="link-footer" href="{{ url('category', $category->slug) }}">{{ Lang::has('categories.' . $category->slug) ? __('categories.' . $category->slug) : $category->name }}</a></li>
         @endforeach
 
         @if (Categories::count() > 6)
@@ -75,9 +78,9 @@
       <h5>@lang('general.links')</h5>
       <ul class="list-unstyled">
       @guest
-        <li><a class="link-footer" href="{{ url('login') }}">{{ trans('auth.login') }}</a></li><li>
+        <li><a class="link-footer" href="{{$settings->home_style == 0 ? url('login') : url('/')}}">{{ trans('auth.login') }}</a></li><li>
           @if ($settings->registration_active == '1')
-        <li><a class="link-footer" href="{{ url('signup') }}">{{ trans('auth.sign_up') }}</a></li><li>
+        <li><a class="link-footer" href="{{$settings->home_style == 0 ? url('signup') : url('/')}}">{{ trans('auth.sign_up') }}</a></li><li>
         @endif
         @else
           <li><a class="link-footer" href="{{ url(Auth::User()->username) }}">{{ trans('general.my_page') }}</a></li><li>
@@ -86,6 +89,7 @@
           <li><a class="link-footer" href="{{ url('logout') }}">{{ trans('users.logout') }}</a></li><li>
       @endguest
 
+      @guest
       <div class="btn-group dropup d-inline ">
         <li>
           <a class="link-footer dropdown-toggle text-decoration-none" href="javascript:;" data-toggle="dropdown">
@@ -97,20 +101,22 @@
 
         <div class="dropdown-menu">
           @foreach (Languages::orderBy('name')->get() as $languages)
-            <a @if ($languages->abbreviation != config('app.locale')) href="{{ url('lang', $languages->abbreviation) }}" @endif class="dropdown-item @if( $languages->abbreviation == config('app.locale') ) active text-white @endif">
+            <a @if ($languages->abbreviation != config('app.locale')) href="{{ url('lang', $languages->abbreviation) }}" @endif class="dropdown-item dropdown-lang @if( $languages->abbreviation == config('app.locale') ) active text-white @endif">
             @if ($languages->abbreviation == config('app.locale')) <i class="fa fa-check mr-1"></i> @endif {{ $languages->name }}
             </a>
             @endforeach
         </div>
         </li>
       </div><!-- dropup -->
+      @endguest
+
       </ul>
     </div>
   </div>
 </footer>
 </div>
 
-<footer class="py-3 @if (Auth::check() && auth()->user()->dark_mode == 'off' || Auth::guest() ) bg-light @endif text-muted text-center">
+<footer class="py-3 @if (Auth::check() && auth()->user()->dark_mode == 'off' || Auth::guest() ) footer_background_color @endif text-center">
   <div class="container">
     <div class="row">
       <div class="col-md-12 copyright">

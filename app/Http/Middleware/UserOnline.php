@@ -30,7 +30,7 @@ class UserOnline
       } catch (\Exception $e) {
         //
       }
-      
+
       return $next($request);
     }
 }

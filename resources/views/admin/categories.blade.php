@@ -14,7 +14,7 @@
         <!-- Main content -->
         <section class="content">
 
-		    @if(Session::has('success_message'))
+		    @if (Session::has('success_message'))
 		    <div class="alert alert-success">
 		    	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 								<span aria-hidden="true">×</span>
@@ -41,18 +41,20 @@
 
                	@if( $totalCategories !=  0 )
                    <tr>
-                      <th>ID</th>
-                      <th>{{ trans('admin.name') }}</th>
-                      <th>{{ trans('admin.actions') }}</th>
-                      <th>{{ trans('admin.status') }}</th>
+                      <th class="active">ID</th>
+                      <th class="active">{{ trans('admin.name') }}</th>
+                      <th class="active">{{ trans('admin.slug') }}</th>
+                      <th class="active">{{ trans('admin.actions') }}</th>
+                      <th class="active">{{ trans('admin.status') }}</th>
                     </tr>
 
                   @foreach( $categories as $category )
                     <tr>
                       <td>{{ $category->id }}</td>
                       <td>{{ $category->name }}</td>
+                      <td>{{ $category->slug }}</td>
                       <td>
-                      	<a href="{{ url('panel/admin/categories/edit/').'/'.$category->id }}" class="btn btn-success btn-xs padding-btn">
+                      	<a href="{{ url('panel/admin/categories/edit/').'/'.$category->id }}" class="btn btn-success btn-sm padding-btn">
                       		{{ trans('admin.edit') }}
                       	</a>
 
@@ -62,7 +64,7 @@
                           'class' => 'displayInline'
                         ]) !!}
 
-                        {!! Form::button(trans('admin.delete'), ['class' => 'btn btn-danger btn-xs padding-btn actionDelete']) !!}
+                        {!! Form::button(trans('admin.delete'), ['class' => 'btn btn-danger btn-sm padding-btn actionDelete']) !!}
                         {!! Form::close() !!}
 
                       		</td>

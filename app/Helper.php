@@ -18,7 +18,7 @@ class Helper
 
 	}
 
-	public static function removeLineBreak( $string )  {
+	public static function removeLineBreak($string)  {
 		return str_replace(array("\r\n", "\r"), "", $string);
 	}
 
@@ -471,5 +471,37 @@ public static function resizeImageFixed( $image, $width, $height, $imageNew = nu
           ));
       }
   }
+
+	public static function urlToDomain($url)
+	{
+   $domain = explode('/', preg_replace('/https?:\/\/(www\.)?/', '', $url));
+   return $domain['0'];
+ }
+
+ public static function expandLink($url)
+ {
+	 $headers = get_headers($url, 1);
+
+	 if (! empty($headers['Location'])) {
+		 $headers['Location'] = (array) $headers['Location'];
+		 $url = array_pop($headers['Location']);
+	 }
+	 return $url;
+ }
+
+ public static function getFirstUrl($string)
+ {
+	 preg_match_all('#\bhttps?://[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/))#', $string, $_matches);
+
+		 $firstURL = $_matches[0][0] ?? false;
+
+	 if ($firstURL) {
+			return $firstURL;
+		 }
+ }
+
+ public static function daysInMonth($month, $year){
+    return $month == 2 ? ($year % 4 ? 28 : ($year % 100 ? 29 : ($year % 400 ? 28 : 29))) : (($month - 1) % 7 % 2 ? 30 : 31);
+}
 
 }//<--- End Class

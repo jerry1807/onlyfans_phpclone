@@ -187,8 +187,16 @@ return [
       'city' => 'City',
       'zip' => 'Postal/ZIP',
       'payment_gateway' => 'Payment Gateway',
+      'payment_gateway_tip' => 'Payment Gateway',
       'MAIL_FROM_ADDRESS' => 'Email no-reply',
       'FILESYSTEM_DRIVER' => 'Disk',
+      'price' => 'Price',
+      'amount' => 'Amount',
+      'birthdate' => 'Birthdate',
+      'navbar_background_color' => 'Navbar background color',
+    	'navbar_text_color' => 'Navbar text color',
+    	'footer_background_color' => 'Footer background color',
+    	'footer_text_color' => 'Footer text color',
 
       'AWS_ACCESS_KEY_ID' => 'Amazon Key', // Not necessary edit
       'AWS_SECRET_ACCESS_KEY' => 'Amazon Secret', // Not necessary edit

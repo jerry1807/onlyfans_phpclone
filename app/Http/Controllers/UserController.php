@@ -43,15 +43,18 @@ class UserController extends Controller
     $subscriptionsActive = Auth::user()
       ->mySubscriptions()
         ->where('stripe_id', '=', '')
-        ->whereDate('ends_at', '>=', Carbon::today())
-        ->orWhere('stripe_status', 'active')
-        ->where('stripe_id', '<>', '')
-        ->whereStripePlan(Auth::user()->plan)
-        ->count();
+          ->whereDate('ends_at', '>=', Carbon::today())
+          ->orWhere('stripe_status', 'active')
+            ->where('stripe_id', '<>', '')
+              ->whereStripePlan(Auth::user()->plan)
+              ->orWhere('stripe_id', '=', '')
+            ->where('stripe_plan', Auth::user()->plan)
+        ->where('free', '=', 'yes')
+      ->count();
 
     $month = date('m');
     $year = date('Y');
-    $daysMonth = cal_days_in_month(0, $month, $year);
+    $daysMonth = Helper::daysInMonth($month, $year);
     $dateFormat = "$year-$month-";
 
     $monthFormat  = trans("months.$month");
@@ -96,7 +99,7 @@ class UserController extends Controller
     }
 
     // All Payments
-    $allPayment = PaymentGateways::where('enabled', '1')->get();
+    $allPayment = PaymentGateways::where('enabled', '1')->whereSubscription('yes')->get();
 
     // Stripe Key
       $_stripe = PaymentGateways::where('id', 2)->where('enabled', '1')->select('key')->first();
@@ -115,13 +118,18 @@ class UserController extends Controller
   		});
 
       //=== Videos
-  		$query->when(request('media') == 'videos', function($q) {
-  			$q->where('video', '<>', '');
+  		$query->when(request('media') == 'videos', function($q) use($user) {
+  			$q->where('video', '<>', '')->orWhere('video_embed', '<>', '')->whereUserId($user->id);
   		});
 
       //=== Audio
   		$query->when(request('media') == 'audio', function($q) {
   			$q->where('music', '<>', '');
+  		});
+
+      //=== Files
+  		$query->when(request('media') == 'files', function($q) {
+  			$q->where('file', '<>', '');
   		});
 
       $updates = $query->orderBy('id','desc')->paginate($this->settings->number_posts_show);
@@ -133,11 +141,17 @@ class UserController extends Controller
             ->where('stripe_plan', $user->plan)
             ->where('stripe_id', '=', '')
             ->whereDate('ends_at', '>=', Carbon::today())
+
               ->orWhere('stripe_status', 'active')
-              ->where('stripe_plan', $user->plan)
+                ->where('stripe_plan', $user->plan)
               ->where('stripe_id', '<>', '')
               ->whereUserId(Auth::user()->id)
-              ->count();
+
+                ->orWhere('stripe_plan', $user->plan)
+                ->where('stripe_id', '=', '')
+              ->whereFree('yes')
+              ->whereUserId(Auth::user()->id)
+              ->first();
 
               // Check Payment Incomplete
               $paymentIncomplete = Auth::user()
@@ -191,6 +205,7 @@ class UserController extends Controller
       ->where('id', '<>', $user->id)
       ->where('id', '<>', Auth::user()->id ?? 0)
       ->whereVerifiedId('yes')
+      ->where('id', '<>', $this->settings->hide_admin_profile == 'on' ? 1 : 0)
       ->inRandomOrder()
       ->paginate(3);
 
@@ -243,7 +258,7 @@ class UserController extends Controller
      $user->email_new_subscriber = $input['email_new_subscriber'] ?? 'no';
      $user->save();
 
-     \Session::flash('status',trans('auth.success_update'));
+     \Session::flash('status', trans('auth.success_update'));
 
      return redirect('settings');
     }
@@ -318,10 +333,11 @@ class UserController extends Controller
       {
 
   	   $input = $request->all();
-  	   $id = Auth::user()->id;
+  	   $id    = Auth::user()->id;
+       $passwordRequired = auth()->user()->password != '' ? 'required|' : null;
 
   		   $validator = Validator::make($input, [
-  			'old_password' => 'required|min:6',
+  			'old_password' => $passwordRequired.'min:6',
   	     'new_password' => 'required|min:6',
       	]);
 
@@ -331,7 +347,7 @@ class UserController extends Controller
   						 ->withInput();
   					 }
 
-  	   if (!\Hash::check($input['old_password'], Auth::user()->password) ) {
+  	   if (auth()->user()->password != '' && !\Hash::check($input['old_password'], auth()->user()->password)) {
   		    return redirect('settings/password')->with( array( 'incorrect_pass' => trans('general.password_incorrect') ) );
   		}
 
@@ -481,21 +497,12 @@ class UserController extends Controller
 
       $input = $this->request->all();
       $id    = auth()->user()->id;
-      $input['_verified_id'] = auth()->user()->verified_id;
       $input['is_admin'] = $id;
 
-      if($this->settings->currency_position == 'right') {
-				$currencyPosition =  2;
-			} else {
-				$currencyPosition =  null;
-			}
-
       $messages = array (
-			'price.min' => trans('users.price_minimum_subscription'.$currencyPosition, ['symbol' => $this->settings->currency_symbol, 'code' => $this->settings->currency_code]),
-			'price.max' => trans('users.price_maximum_subscription'.$currencyPosition, ['symbol' => $this->settings->currency_symbol, 'code' => $this->settings->currency_code]),
       "letters" => trans('validation.letters'),
       "email.required_if" => trans('validation.required'),
-      "price.required_if" => trans('general.subscription_price_required'),
+      "birthdate.before" => trans('general.error_adult'),
 		);
 
 		 Validator::extend('ascii_only', function($attribute, $value, $parameters){
@@ -506,12 +513,6 @@ class UserController extends Controller
 	Validator::extend('letters', function($attribute, $value, $parameters){
     	return preg_match('/[a-zA-Z0-9]/', $value);
 	});
-
-  if (auth()->user()->verified_id == 'no' || auth()->user()->verified_id == 'reject') {
-    $this->settings->min_subscription_amount = 0;
-  } else {
-    $this->settings->min_subscription_amount = $this->settings->min_subscription_amount;
-  }
 
       $validator = Validator::make($input, [
         'full_name' => 'required|string|max:100',
@@ -525,22 +526,19 @@ class UserController extends Controller
         'pinterest' => 'url',
         'github' => 'url',
         'story' => 'required|max:'.$this->settings->story_length.'',
-        'price' => 'required_if:_verified_id,==,yes|numeric|min:'.$this->settings->min_subscription_amount.'|max:'.$this->settings->max_subscription_amount.'',
         'countries_id' => 'required',
         'city' => 'max:100',
         'address' => 'max:100',
         'zip' => 'max:20',
+        'birthdate' =>'required|date|before:'.Carbon::now()->subYears(18),
      ], $messages);
 
-     if ($validator->fails()) {
-        return redirect()->back()
-            ->withErrors($validator)
-            ->withInput();
-          }
-
-      if (auth()->user()->verified_id == 'yes') {
-        $this->createPlanStripe();
-      }
+      if ($validator->fails()) {
+           return response()->json([
+               'success' => false,
+               'errors' => $validator->getMessageBag()->toArray(),
+           ]);
+       } //<-- Validator
 
       $user                  = User::find($id);
       $user->name            = strip_tags($this->request->full_name);
@@ -555,7 +553,6 @@ class UserController extends Controller
       $user->zip             = $this->request->zip;
       $user->company         = $this->request->company;
       $user->story           = trim(Helper::checkTextDb($this->request->story));
-      $user->price           = $this->request->price;
       $user->facebook         = trim($this->request->facebook);
       $user->twitter         = trim($this->request->twitter);
       $user->instagram         = trim($this->request->instagram);
@@ -563,10 +560,77 @@ class UserController extends Controller
       $user->pinterest         = trim($this->request->pinterest);
       $user->github         = trim($this->request->github);
       $user->plan           = 'user_'.auth()->user()->id;
+      $user->gender         = $this->request->gender;
+      $user->birthdate      = $this->request->birthdate;
+      $user->language      = $this->request->language;
+      $user->save();
+
+      return response()->json([
+              'success' => true,
+            ]);
+
+    }//<--- End Method
+
+    public function saveSubscription()
+    {
+
+      $input = $this->request->all();
+
+      if (auth()->user()->verified_id == 'no' || auth()->user()->verified_id == 'reject') {
+        return redirect()->back()
+            ->withErrors([
+     					'errors' => trans('general.error'),
+     				]);
+          }
+
+      $id    = auth()->user()->id;
+      $input['_verified_id'] = auth()->user()->verified_id;
+
+      if ($this->settings->currency_position == 'right') {
+				$currencyPosition =  2;
+			} else {
+				$currencyPosition =  null;
+			}
+
+      if ($this->request->free_subscription) {
+        $priceRequired = null;
+      } else {
+        $priceRequired = 'required_if:_verified_id,==,yes|';
+      }
+
+      $messages = array (
+			'price.min' => trans('users.price_minimum_subscription'.$currencyPosition, ['symbol' => $this->settings->currency_symbol, 'code' => $this->settings->currency_code]),
+			'price.max' => trans('users.price_maximum_subscription'.$currencyPosition, ['symbol' => $this->settings->currency_symbol, 'code' => $this->settings->currency_code]),
+      "price.required_if" => trans('general.subscription_price_required'),
+		);
+
+  if (auth()->user()->verified_id == 'no' || auth()->user()->verified_id == 'reject') {
+    $this->settings->min_subscription_amount = 0;
+  } else {
+    $this->settings->min_subscription_amount = $this->settings->min_subscription_amount;
+  }
+
+      $validator = Validator::make($input, [
+        'price' => $priceRequired.'numeric|min:'.$this->settings->min_subscription_amount.'|max:'.$this->settings->max_subscription_amount.'',
+     ], $messages);
+
+     if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+          }
+
+      if (auth()->user()->verified_id == 'yes') {
+        $this->createPlanStripe();
+      }
+
+      $user                  = User::find($id);
+      $user->price           = $this->request->price ?? auth()->user()->price;
+      $user->free_subscription = $this->request->free_subscription ?? 'no';
       $user->save();
 
       \Session::flash('status', trans('admin.success_update'));
-			return redirect('settings/page');
+			return redirect('settings/subscription');
 
     }//<--- End Method
 
@@ -821,6 +885,12 @@ class UserController extends Controller
     public function ajaxNotifications()
     {
   		 if (request()->ajax()) {
+
+         // Logout user suspended
+         if (Auth::user()->status == 'suspended') {
+           Auth::logout();
+         }
+
   			// Notifications
   			$notifications_count = Auth::user()->notifications()->where('status', '0')->count();
         // Messages
@@ -863,7 +933,7 @@ class UserController extends Controller
         'address'  => 'required',
         'city' => 'required',
         'zip' => 'required',
-        'image' => 'required|mimes:jpg,gif,png,jpe,jpeg|max:'.$this->settings->file_size_allowed_verify_account.'',
+        'image' => 'required|mimes:jpg,gif,png,jpe,jpeg,zip|max:'.$this->settings->file_size_allowed_verify_account.'',
      ]);
 
       if ($validator->fails()) {
@@ -955,6 +1025,7 @@ class UserController extends Controller
      public function cancelSubscription($id)
      {
        $checkSubscription = auth()->user()->userSubscriptions()->whereStripeId($id)->firstOrFail();
+       $creator = User::wherePlan()->first($checkSubscription->stripe_plan);
        $payment = PaymentGateways::whereId(2)->whereName('Stripe')->whereEnabled(1)->firstOrFail();
 
        $stripe = new \Stripe\StripeClient($payment->key_secret);
@@ -965,7 +1036,8 @@ class UserController extends Controller
          return back()->withErrorMessage($e->getMessage());
        }
 
-       return back()->withMessage(trans('general.subscription_canceled'));
+       session()->put('subscription_cancel', trans('general.subscription_cancel'));
+       return redirect($creator->username);
 
      }// End Method
 
@@ -993,9 +1065,27 @@ class UserController extends Controller
        ->where('id', '<>', Auth::id())
        ->where('id', '<>', Auth::user()->id ?? 0)
        ->whereVerifiedId('yes')
+       ->where('id', '<>', $this->settings->hide_admin_profile == 'on' ? 1 : 0)
        ->inRandomOrder()
        ->paginate(3);
 
        return view('users.bookmarks', ['updates' => $bookmarks, 'users' => $users]);
      }
+
+     // Download File
+     public function downloadFile($id)
+   	{
+      $post = Updates::findOrFail($id);
+
+      $pathFile = config('path.files').$post->file;
+      $headers = [
+				'Content-Type:' => ' application/x-zip-compressed',
+				'Cache-Control' => 'no-cache, no-store, must-revalidate',
+				'Pragma' => 'no-cache',
+				'Expires' => '0'
+			];
+
+      return Storage::download($pathFile, $post->file_name.' '.__('general.by').' @'.$post->user()->username.'.zip', $headers);
+
+    }
 }

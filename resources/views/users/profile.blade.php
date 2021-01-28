@@ -76,17 +76,17 @@
             <h4 class="mt-1">
               {{$user->name}}
 
-              @if ($user->featured == 'yes')
-                <small class="text-featured" title="{{trans('users.creator_featured')}}"data-toggle="tooltip" data-placement="top">
-                <i class="fas fa-award"></i>
+              @if ($user->verified_id == 'yes')
+              <small class="verified" title="{{trans('general.verified_account')}}" data-toggle="tooltip" data-placement="top">
+                <i class="feather icon-check-circle"></i>
               </small>
             @endif
 
-              @if ($user->verified_id == 'yes')
-              <small class="verified" title="{{trans('general.verified_account')}}"data-toggle="tooltip" data-placement="top">
-                <i class="fas fa-check-circle"></i>
-              </small>
-            @endif
+            @if ($user->featured == 'yes')
+              <small class="text-featured" title="{{trans('users.creator_featured')}}" data-toggle="tooltip" data-placement="top">
+              <i class="fas fa fa-award"></i>
+            </small>
+          @endif
           </h4>
 
             <p>
@@ -98,7 +98,7 @@
                </span>
                @endif
 
-              @if ($user->profession != '')
+              @if ($user->profession != '' && $user->verified_id == 'yes')
                 {{$user->profession}}
               @endif
           </span>
@@ -112,48 +112,133 @@
 
               @if ($user->price != 0.00 && $user->verified_id == 'yes')
 
-              @if (Auth::check() && Auth::user()->id != $user->id && $checkSubscription == 0 && ! $paymentIncomplete)
+              @if (Auth::check() && Auth::user()->id != $user->id
+                  && ! $checkSubscription
+                  && ! $paymentIncomplete
+                  && $user->free_subscription == 'no'
+                  && $user->updates()->count() != 0
+                  )
                 <a href="javascript:void(0);" data-toggle="modal" data-target="#subscriptionForm" class="btn btn-primary btn-profile mr-1"><i class="fa fa-unlock-alt mr-1"></i> {{trans('general.get_access_month', ['price' => Helper::amountFormatDecimal($user->price)])}}</a>
-              @elseif (Auth::check() && Auth::user()->id != $user->id && $checkSubscription == 0 && $paymentIncomplete)
+              @elseif (Auth::check() && Auth::user()->id != $user->id && ! $checkSubscription && $paymentIncomplete)
                 <a href="{{ route('cashier.payment', $paymentIncomplete->last_payment) }}" class="btn btn-warning btn-profile mr-1"><i class="fa fa-exclamation-triangle"></i> {{trans('general.confirm_payment')}}</a>
-              @elseif (Auth::check() && Auth::user()->id != $user->id && $checkSubscription == 1)
-                <a href="javascript:void(0);" class="btn btn-success btn-profile mr-1 disabled"><i class="fa fa-check"></i> {{trans('general.your_subscribed')}}</a>
-              @elseif (Auth::guest())
-                <a href="{{url('login')}}" class="btn btn-primary btn-profile mr-1"><i class="fa fa-unlock-alt mr-1"></i> {{trans('general.get_access_month', ['price' => Helper::amountFormatDecimal($user->price)])}}</a>
+              @elseif (Auth::check() && Auth::user()->id != $user->id && $checkSubscription)
+
+                @if ($checkSubscription->stripe_status == 'active' && $checkSubscription->stripe_id != '')
+
+                {!! Form::open([
+                  'method' => 'POST',
+                  'url' => "subscription/cancel/$checkSubscription->stripe_id",
+                  'class' => 'd-inline formCancel'
+                ]) !!}
+
+                {!! Form::button('<i class="feather icon-user-check mr-1"></i> '.trans('general.your_subscribed'), ['class' => 'btn btn-success btn-profile mr-1 cancelBtn subscriptionActive']) !!}
+                {!! Form::close() !!}
+
+              @elseif ($checkSubscription->stripe_id == '' && $checkSubscription->free == 'yes')
+                {!! Form::open([
+                  'method' => 'POST',
+                  'url' => "subscription/free/cancel/$checkSubscription->id",
+                  'class' => 'd-inline formCancel'
+                ]) !!}
+
+                {!! Form::button('<i class="feather icon-user-check mr-1"></i> '.trans('general.your_subscribed'), ['class' => 'btn btn-success btn-profile mr-1 cancelBtn subscriptionActive']) !!}
+                {!! Form::close() !!}
+              @else
+                <a href="javascript:void(0);" class="btn btn-success btn-profile mr-1 disabled">
+                  <i class="feather icon-user-check mr-1"></i> {{trans('general.your_subscribed')}}
+                </a>
+              @endif
+
+              @elseif (Auth::check() && Auth::user()->id != $user->id && $user->free_subscription == 'yes')
+                <a href="javascript:void(0);" data-toggle="modal" data-target="#subscriptionFreeForm" class="btn btn-primary btn-profile mr-1">
+                  <i class="feather icon-user-plus mr-1"></i> {{trans('general.subscribe_for_free')}}
+                </a>
+              @elseif (Auth::guest() && $user->updates()->count() != 0)
+                <a href="{{url('login')}}" data-toggle="modal" data-target="#loginFormModal" class="btn btn-primary btn-profile mr-1">
+                  @if ($user->free_subscription == 'yes')
+                    <i class="feather icon-user-plus mr-1"></i> {{trans('general.subscribe_for_free')}}
+                  @else
+                  <i class="fa fa-unlock-alt mr-1"></i> {{trans('general.get_access_month', ['price' => Helper::amountFormatDecimal($user->price)])}}
+                @endif
+                </a>
             @endif
 
             @endif
 
-              @if (Auth::guest() && $user->verified_id == 'yes' || Auth::check() && Auth::user()->id != $user->id && $user->verified_id == 'yes')
-              <button data-url="{{url('messages/'.$user->id, $user->username)}}" id="sendMessageUser" class="btn btn-google btn-profile mr-1">
-                <i class="far fa-comment-dots mr-1"></i> {{trans('general.message')}}
+            @if (Auth::check() && Auth::user()->id != $user->id && $user->updates()->count() <> 0)
+              <a href="javascript:void(0);" data-toggle="modal" title="{{trans('general.tip')}}" data-target="#tipForm" class="btn btn-google btn-profile mr-1" data-cover="{{Storage::url(config('path.cover').$user->cover)}}" data-avatar="{{Storage::url(config('path.avatar').$user->avatar)}}" data-name="{{$user->name}}" data-userid="{{$user->id}}">
+                <i class="fa fa-donate mr-1 mr-lg-0"></i> {{trans('general.tip')}}
+              </a>
+            @elseif (Auth::guest() && $user->updates()->count() <> 0)
+              <a href="{{url('login')}}" data-toggle="modal" data-target="#loginFormModal" class="btn btn-google btn-profile mr-1" title="{{trans('general.tip')}}">
+                <i class="fa fa-donate mr-1 mr-lg-0"></i> {{trans('general.tip')}}
+              </a>
+            @endif
+
+            @if (Auth::guest() && $user->verified_id == 'yes' || Auth::check() && Auth::user()->id != $user->id && $user->verified_id == 'yes')
+              <button @guest data-toggle="modal" data-target="#loginFormModal" @else id="sendMessageUser" @endguest data-url="{{url('messages/'.$user->id, $user->username)}}" title="{{trans('general.message')}}" class="btn btn-google btn-profile mr-1">
+                <i class="feather icon-send mr-1 mr-lg-0"></i> <span class="d-lg-none">{{trans('general.message')}}</span>
               </button>
             @endif
 
             @if ($user->verified_id == 'yes')
-            <div class="dropdown">
-              <button class="btn btn-profile btn-google" id="dropdownUserShare" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fa fa-ellipsis-h mr-1"></i> <span class="d-lg-none">{{trans('general.share')}}</span>
+              <button class="btn btn-profile btn-google" title="{{trans('general.share')}}" id="dropdownUserShare" role="button" data-toggle="modal" data-target=".share-modal">
+                <i class="far fa-share-square mr-1 mr-lg-0"></i> <span class="d-lg-none">{{trans('general.share')}}</span>
               </button>
 
-              <div class="dropdown-menu d-menu dropdown-menu-right" aria-labelledby="dropdownUserShare">
+            <!-- Share modal -->
+          <div class="modal fade share-modal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+          		<div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="mySmallModalLabel">{{trans('general.share')}}</h5>
+                  <button type="button" class="close close-inherit" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fa fa-times-circle"></i></span>
+                  </button>
+                </div>
+                <div class="modal-body">
+          				<div class="container-fluid">
+          					<div class="row">
+          						<div class="col-md-4 col-6 mb-3">
+          							<a href="https://www.facebook.com/sharer/sharer.php?u={{url()->current()}}" title="Facebook" target="_blank" class="social-share text-muted d-block text-center h6">
+          								<i class="fab fa-facebook-square facebook-btn"></i>
+          								<span class="btn-block mt-3">Facebook</span>
+          							</a>
+          						</div>
+          						<div class="col-md-4 col-6 mb-3">
+          							<a href="https://twitter.com/intent/tweet?url={{url()->current()}}&text={{ e( $user->name ) }}" data-url="{{url()->current()}}" class="social-share text-muted d-block text-center h6" target="_blank" title="Twitter">
+          								<i class="fab fa-twitter twitter-btn"></i> <span class="btn-block mt-3">Twitter</span>
+          							</a>
+          						</div>
+          						<div class="col-md-4 col-6 mb-3">
+          							<a href="whatsapp://send?text={{url()->current()}}" data-action="share/whatsapp/share" class="social-share text-muted d-block text-center h6" title="WhatsApp">
+          								<i class="fab fa-whatsapp btn-whatsapp"></i> <span class="btn-block mt-3">WhatsApp</span>
+          							</a>
+          						</div>
 
-                <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u={{url()->current()}}" class="dropdown-item link-share">
-                  <i class="fab fa-facebook mr-2"></i> {{trans('general.share')}}
-                </a>
+          						<div class="col-md-4 col-6 mb-3">
+          							<a href="mailto:?subject={{ e( $user->name ) }}&amp;body={{url()->current()}}" class="social-share text-muted d-block text-center h6" title="{{trans('auth.email')}}">
+          								<i class="far fa-envelope"></i> <span class="btn-block mt-3">{{trans('auth.email')}}</span>
+          							</a>
+          						</div>
+          						<div class="col-md-4 col-6 mb-3">
+          							<a href="sms://?body={{ trans('general.check_this') }} {{url()->current()}}" class="social-share text-muted d-block text-center h6" title="{{ trans('general.sms') }}">
+          								<i class="fa fa-sms"></i> <span class="btn-block mt-3">{{ trans('general.sms') }}</span>
+          							</a>
+          						</div>
+          						<div class="col-md-4 col-6 mb-3">
+          							<a href="javascript:void(0);" id="btn_copy_url" class="social-share text-muted d-block text-center h6 link-share" title="{{trans('general.copy_link')}}">
+          							<i class="fas fa-link"></i> <span class="btn-block mt-3">{{trans('general.copy_link')}}</span>
+          						</a>
+                      <input type="hidden" readonly="readonly" id="copy_link" class="form-control" value="{{url()->current()}}">
+          					</div>
+          					</div>
 
-                <a target="_blank" href="https://twitter.com/intent/tweet?url={{url()->current()}}&text={{ e( $user->name ) }}" class="dropdown-item link-share">
-                  <i class="fab fa-twitter mr-2"></i> Tweet
-                </a>
-
-                <a target="_blank" href="whatsapp://send?text={{url()->current()}}" data-action="share/whatsapp/share" title="WhatsApp" class="dropdown-item link-share">
-                  <i class="fab fa-whatsapp mr-2"></i> WhatsApp
-                </a>
-
-                <a class="dropdown-item link-share" href="javascript:void(0);" id="btn_copy_url"><i class="fas fa-link mr-2"></i> {{trans('general.copy_link')}}</a>
-                <input type="hidden" readonly="readonly" id="copy_link" class="form-control" value="{{url()->current()}}">
+          				</div>
+                </div>
               </div>
             </div>
+          </div>
           @endif
 
           </div><!-- d-flex-user -->
@@ -161,7 +246,7 @@
             @if (Auth::check() && Auth::user()->id != $user->id)
             <div class="text-center">
               <button type="button" class="btn e-none btn-link text-danger p-0" data-toggle="modal" data-target="#reportCreator">
-                <small><i class="fas fa-flag"></i> {{trans('general.report_user')}}</small>
+                <small><i class="fas fa-flag mr-1"></i> {{trans('general.report_user')}}</small>
               </button>
             </div>
           @endif
@@ -169,44 +254,53 @@
           </div><!-- media-body -->
         </div><!-- media -->
 
+        @if ($user->verified_id == 'yes')
         <ul class="nav nav-profile justify-content-center">
-          <li class="nav-link @if (request()->path() == $user->username)active @endif">
+
+          <li class="nav-link @if (request()->path() == $user->username)active @endif navbar-user-mobile">
             <small class="btn-block sm-btn-size">{{$user->updates()->count()}}</small>
-              <a href="{{request()->path() == $user->username ? 'javascript:;' : url($user->username)}}">{{trans('general.posts')}}</a>
+              <a href="{{request()->path() == $user->username ? 'javascript:;' : url($user->username)}}" title="{{trans('general.posts')}}"><i class="feather icon-file-text"></i> <span class="d-lg-inline-block d-none">{{trans('general.posts')}}</span></a>
             </li>
 
-            <li class="nav-link @if (request()->path() == $user->username.'/photos')active @endif">
+            <li class="nav-link @if (request()->path() == $user->username.'/photos')active @endif navbar-user-mobile">
               <small class="btn-block sm-btn-size">{{$user->updates()->where('image', '<>', '')->count()}}</small>
-              <a href="{{request()->path() == $user->username.'/photos' ? 'javascript:;' : url($user->username, 'photos')}}">{{trans('general.photos')}}</a>
+              <a href="{{request()->path() == $user->username.'/photos' ? 'javascript:;' : url($user->username, 'photos')}}" title="{{trans('general.photos')}}"><i class="feather icon-image"></i> <span class="d-lg-inline-block d-none">{{trans('general.photos')}}</span></a>
             </li>
 
-            <li class="nav-link @if (request()->path() == $user->username.'/videos')active @endif">
-              <small class="btn-block sm-btn-size">{{$user->updates()->where('video', '<>', '')->count()}}</small>
-              <a href="{{request()->path() == $user->username.'/videos' ? 'javascript:;' : url($user->username, 'videos')}}">{{trans('general.videos')}}</a>
+            <li class="nav-link @if (request()->path() == $user->username.'/videos')active @endif navbar-user-mobile">
+              <small class="btn-block sm-btn-size">{{$user->updates()->where('video', '<>', '')->orWhere('video_embed', '<>', '')->whereUserId($user->id)->count()}}</small>
+              <a href="{{request()->path() == $user->username.'/videos' ? 'javascript:;' : url($user->username, 'videos')}}" title="{{trans('general.video')}}"><i class="feather icon-video"></i> <span class="d-lg-inline-block d-none">{{trans('general.videos')}}</span></a>
               </li>
 
-            <li class="nav-link @if (request()->path() == $user->username.'/audio')active @endif">
+            <li class="nav-link @if (request()->path() == $user->username.'/audio')active @endif navbar-user-mobile">
               <small class="btn-block sm-btn-size">{{$user->updates()->where('music', '<>', '')->count()}}</small>
-              <a href="{{request()->path() == $user->username.'/audio' ? 'javascript:;' : url($user->username, 'audio')}}">{{trans('general.audio')}}</a>
+              <a href="{{request()->path() == $user->username.'/audio' ? 'javascript:;' : url($user->username, 'audio')}}" title="{{trans('general.audio')}}"><i class="feather icon-mic"></i> <span class="d-lg-inline-block d-none">{{trans('general.audio')}}</span></a>
             </li>
 
+            <li class="nav-link @if (request()->path() == $user->username.'/files')active @endif navbar-user-mobile">
+              <small class="btn-block sm-btn-size">{{$user->updates()->where('file', '<>', '')->count()}}</small>
+              <a href="{{request()->path() == $user->username.'/files' ? 'javascript:;' : url($user->username, 'files')}}" title="{{trans('general.files')}}"><i class="far fa-file-archive"></i> <span class="d-lg-inline-block d-none">{{trans('general.files')}}</span></a>
+            </li>
         </ul>
+      @endif
+
       </div><!-- col-lg-12 -->
     </div><!-- row -->
   </div><!-- container -->
 
+  @if ($user->verified_id == 'yes')
   <div class="container py-4 pb-5">
     <div class="row">
       <div class="col-lg-4 mb-3">
 
-        <button type="button" class="btn btn-secondary btn-block mb-2 d-lg-none" type="button" data-toggle="collapse" data-target="#navbarUserHome" aria-controls="navbarCollapse" aria-expanded="false">
-      		<i class="fa fa-bars myicon-right"></i> {{trans('general.about')}}
+        <button type="button" class="btn btn-secondary btn-block mb-2 d-lg-none text-word-break" type="button" data-toggle="collapse" data-target="#navbarUserHome" aria-controls="navbarCollapse" aria-expanded="false">
+      		<i class="fa fa-bars mr-1"></i> {{trans('general.about')}} {{ $user->first_name }}
       	</button>
 
       <div class="sticky-top navbar-collapse collapse d-lg-block" id="navbarUserHome">
         <div class="card mb-3">
           <div class="card-body">
-            <h6 class="card-title">{{ trans('general.about') }}</h6>
+            <h6 class="card-title">{{ trans('general.about') }} {{ $user->first_name }}</h6>
             <p class="card-text position-relative update-text">
               @if (isset($user->country()->country_name))
               <small class="btn-block">
@@ -217,7 +311,8 @@
               <small class="btn-block m-0 mb-1">
                 <i class="fa fa-user-circle mr-1 text-muted"></i> {{ trans('general.member_since') }} {{ Helper::formatDate($user->date) }}
               </small>
-              @if ($user->verified_id == 'yes')
+
+            @if ($user->verified_id == 'yes')
               {!! Helper::checkText($user->story)  !!}
             @endif
             </p>
@@ -253,21 +348,23 @@
               @if ($user->categories_id != 0 && $user->verified_id == 'yes')
               <div class="w-100">
                 <a href="{{url('category', $user->category->slug)}}" class="badge badge-pill badge-secondary">
-                  <i class="fa fa-tag mr-1"></i> {{ $user->category->name }}
+                  <i class="fa fa-tag mr-1"></i> {{ Lang::has('categories.' . $user->category->slug) ? __('categories.' . $user->category->slug) : $user->category->name }}
                 </a>
               </div>
             @endif
           </div><!-- card-body -->
         </div><!-- card -->
 
+        <div class="d-lg-block d-none">
         @include('includes.footer-tiny')
+      </div>
 
         </div><!-- navbar-collapse -->
       </div><!-- col-lg-4 -->
 
       <div class="col-lg-8">
 
-        @if (Auth::check() && Auth::user()->id == $user->id && request()->path() == $user->username)
+        @if (Auth::check() && Auth::user()->id == $user->id && request()->path() == $user->username && auth()->user()->verified_id != 'reject')
           @include('includes.form-post')
         @endif
 
@@ -298,6 +395,7 @@
       </div>
       </div><!-- row -->
     </div><!-- container -->
+  @endif
 
 
     @if (Auth::check() && Auth::user()->id != $user->id)
@@ -305,7 +403,7 @@
       <div class="modal-dialog modal-danger modal-xs">
         <div class="modal-content">
           <div class="modal-header">
-            <h6 class="modal-title font-weight-light" id="modal-title-default"><i class="fas fa-flag"></i> {{trans('general.report_user')}}</h6>
+            <h6 class="modal-title font-weight-light" id="modal-title-default"><i class="fas fa-flag mr-1"></i> {{trans('general.report_user')}}</h6>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">×</span>
             </button>
@@ -322,6 +420,9 @@
                   <option value="copyright">{{trans('admin.copyright')}}</option>
                   <option value="privacy_issue">{{trans('admin.privacy_issue')}}</option>
                   <option value="violent_sexual_content">{{trans('admin.violent_sexual_content')}}</option>
+                  <option value="spam">{{trans('general.spam')}}</option>
+                  <option value="fraud">{{trans('general.fraud')}}</option>
+                  <option value="under_age">{{trans('general.under_age')}}</option>
                 </select>
                 </div><!-- /.form-group-->
             </div><!-- Modal body -->
@@ -337,7 +438,7 @@
       </div><!-- Modal reportCreator -->
     @endif
 
-    @if (Auth::check() && Auth::user()->id != $user->id && $checkSubscription == 0 && $user->verified_id == 'yes')
+    @if (Auth::check() && Auth::user()->id != $user->id && ! $checkSubscription  && $user->verified_id == 'yes')
     <div class="modal fade" id="subscriptionForm" tabindex="-1" role="dialog" aria-labelledby="modal-form" aria-hidden="true">
       <div class="modal-dialog modal- modal-dialog-centered modal-sm" role="document">
         <div class="modal-content">
@@ -362,13 +463,13 @@
                 @endif
 
                 <div class="text-center text-muted mb-2">
-                  <h5>{{trans('general.what_will_you_get')}}:</h5>
+                  <h5>{{trans('general.what_will_you_get')}}</h5>
                 </div>
 
                 <ul class="list-unstyled">
-                  <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.access_one_month')}}</li>
                   <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.full_access_content')}}</li>
                   <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.direct_message_with_this_user')}}</li>
+                  <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.cancel_subscription_any_time')}}</li>
                 </ul>
 
                 <div class="text-center text-muted mb-2 @if ($allPayment->count() == 1) d-none @endif">
@@ -392,7 +493,7 @@
                     }
 
                     if ($payment->type == 'card' ) {
-                      $paymentName = trans('general.debit_credit_card') .' ('.$payment->name.')'.$recurrent;
+                      $paymentName = '<i class="far fa-credit-card mr-1"></i> '.trans('general.debit_credit_card') .' ('.$payment->name.')'.$recurrent;
                     } else {
                       $paymentName = '<img src="'.url('public/img/payments', $payment->logo).'" width="70"/>'.$recurrent;
                     }
@@ -416,6 +517,24 @@
 
                   @endforeach
 
+                  <div class="custom-control custom-radio mb-3">
+                    <input name="payment_gateway" @if (Auth::user()->wallet == 0) disabled @endif value="wallet" id="tip_radio0" class="custom-control-input" type="radio">
+                    <label class="custom-control-label" for="tip_radio0">
+                      <span>
+                        <strong>
+                        <i class="fas fa-wallet mr-1"></i> {{ __('general.wallet') }}
+                        <span class="w-100 d-block font-weight-light">
+                          {{ __('general.available_balance') }}: <span class="font-weight-bold mr-1">{{Helper::amountFormatDecimal(Auth::user()->wallet)}}</span>
+
+                          @if (Auth::user()->wallet == 0)
+                          <a href="{{ url('my/wallet') }}" class="link-border">{{ __('general.recharge') }}</a>
+                        @endif
+                        </span>
+                      </strong>
+                      </span>
+                    </label>
+                  </div>
+
                   <div class="alert alert-danger display-none" id="error">
                       <ul class="list-unstyled m-0" id="showErrors"></ul>
                     </div>
@@ -428,6 +547,9 @@
                   </div>
                   <div class="text-center">
                     <button type="submit" id="subscriptionBtn" class="btn btn-primary mt-4"><i></i> {{trans('general.pay')}} {{Helper::amountWithoutFormat($user->price)}} {{$settings->currency_code}}</button>
+                    <div class="w-100 mt-2">
+                      <button type="button" class="btn e-none p-0" data-dismiss="modal">{{trans('admin.cancel')}}</button>
+                    </div>
                   </div>
                 </form>
               </div>
@@ -436,6 +558,56 @@
         </div>
       </div>
     </div><!-- End Modal Subscription -->
+
+    <!-- Subscription Free -->
+    <div class="modal fade" id="subscriptionFreeForm" tabindex="-1" role="dialog" aria-labelledby="modal-form" aria-hidden="true">
+      <div class="modal-dialog modal- modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content">
+          <div class="modal-body p-0">
+            <div class="card bg-white shadow border-0">
+              <div class="card-header pb-2 border-0 position-relative" style="height: 100px; background: {{$settings->color_default}} @if ($user->cover != '')  url('{{Storage::url(config('path.cover').$user->cover)}}') no-repeat center center @endif; background-size: cover;">
+
+              </div>
+              <div class="card-body px-lg-5 py-lg-5 position-relative">
+
+                <div class="text-muted text-center mb-3 position-relative modal-offset">
+                  <img src="{{Storage::url(config('path.avatar').$user->avatar)}}" width="100" alt="{{$user->name}}" class="avatar-modal rounded-circle mb-1">
+                  <h6 class="font-weight-light">
+                    {{trans('general.subscribe_free_content') }} {{$user->name}}
+                  </h6>
+                </div>
+
+                @if ($updates->total() == 0)
+                  <div class="alert alert-warning fade show small" role="alert">
+                    <i class="fa fa-exclamation-triangle mr-1"></i> {{ $user->first_name }} {{ trans('general.not_posted_any_content') }}
+                  </div>
+                @endif
+
+                <div class="text-center text-muted mb-2">
+                  <h5>{{trans('general.what_will_you_get')}}</h5>
+                </div>
+
+                <ul class="list-unstyled">
+                  <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.full_access_content')}}</li>
+                  <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.direct_message_with_this_user')}}</li>
+                  <li><i class="fa fa-check mr-2 text-primary"></i> {{trans('general.cancel_subscription_any_time')}}</li>
+                </ul>
+
+                <div class="w-100 text-center">
+                  <a href="javascript:void(0);" data-id="{{ $user->id }}" id="subscribeFree" class="btn btn-primary btn-profile mr-1">
+                    <i class="feather icon-user-plus mr-1"></i> {{trans('general.subscribe_for_free')}}
+                  </a>
+                  <div class="w-100 mt-2">
+                    <button type="button" class="btn e-none p-0" data-dismiss="modal">{{trans('admin.cancel')}}</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End Modal Subscription Free -->
   @endif
 @endsection
 
@@ -444,9 +616,7 @@
 @if (Auth::check() && Auth::user()->id == $user->id)
 <script src="{{ asset('public/js/upload-avatar-cover.js') }}"></script>
 @endif
-@if (Auth::check())
-<script src="{{ asset('public/js/payment.js') }}"></script>
-@endif
+
 <script type="text/javascript">
 
  @if (session('noty_error'))
@@ -484,13 +654,12 @@
 
     @if (session('subscription_cancel'))
      swal({
-       title: "{{ trans('general.error_oops') }}",
+       title: "{{ trans('general.canceled') }}",
        text: "{{ session('subscription_cancel') }}",
        type: "error",
        confirmButtonText: "{{ trans('users.ok') }}"
        });
     @endif
-
 </script>
 @endsection
 @php session()->forget('subscription_cancel') @endphp

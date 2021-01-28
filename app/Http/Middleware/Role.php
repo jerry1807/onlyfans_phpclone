@@ -35,10 +35,11 @@ class Role
 	 */
 	public function handle($request, Closure $next)
 	{
+
 		if ($this->auth->guest()) {
 
 				return redirect()->guest('login')
-					->with(array('login_required' => trans('auth.login_required')));
+					->with(['login_required' => trans('auth.login_required')]);
 
 		} else if( $this->auth->User()->role == 'normal' ){
 				return redirect('/');

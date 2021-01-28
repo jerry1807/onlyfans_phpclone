@@ -2,7 +2,7 @@
 
 @section('title') {{$title}} -@endsection
 
-    @section('description_custom'){{$description ? $description : $settings->description}}@endsection
+    @section('description_custom'){{$description ? $description : trans('seo.description')}}@endsection
     @section('keywords_custom'){{$keywords ? $keywords.',' : null}}@endsection
 
 @section('content')

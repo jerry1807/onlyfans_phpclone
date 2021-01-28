@@ -91,6 +91,27 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
 	// Stripe Webhook
 	Route::post('stripe/webhook','StripeWebHookController@handleWebhook');
 
+	// Paypal IPN (TIPS)
+  Route::post('paypal/tip/ipn','TipController@paypalTipIpn');
+
+  Route::get('paypal/tip/success/{user}', function($user){
+ 	 session()->put('subscription_success', trans('general.tip_sent_success'));
+ 	 return redirect($user);
+  	});
+
+  Route::get('paypal/tip/cancel/{user}', function($user){
+ 	 session()->put('subscription_cancel', trans('general.tip_sent_success'));
+ 	 return redirect($user);
+  	});
+
+	// Tip on Messages
+   Route::get('paypal/msg/tip/redirect/{id}', function($id){
+  	 return redirect('messages/'.$id);
+   	});
+
+		// Paypal IPN (Add Funds)
+	  Route::post('paypal/add/funds/ipn','AddFundsController@paypalIpn');
+
  /*
   |-----------------------------------
   | User Views LOGGED
@@ -104,6 +125,12 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
 	 // Buy Subscription
 	 Route::post('buy/subscription','SubscriptionsController@buy');
 
+	 // Free Subscription
+	 Route::post('subscription/free','SubscriptionsController@subscriptionFree');
+
+	 // Cancel Subscription
+	 Route::post('subscription/free/cancel/{id}','SubscriptionsController@cancelFreeSubscription');
+
 	 // Ajax Request
 	 Route::post('ajax/like', 'UserController@like');
 	 Route::get('ajax/notifications', 'UserController@ajaxNotifications');
@@ -116,6 +143,10 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
   	Route::get('settings/page','UserController@settingsPage');
   	Route::post('settings/page','UserController@updateSettingsPage');
 		Route::post('delete/cover','UserController@deleteImageCover');
+
+		// Subscription Page
+   	Route::view('settings/subscription','users.subscription');
+   	Route::post('settings/subscription','UserController@saveSubscription');
 
 		// Verify Account
    	Route::get('settings/verify/account','UserController@verifyAccount');
@@ -202,6 +233,21 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
 	Route::get('my/bookmarks','UserController@myBookmarks');
 	Route::get('ajax/user/bookmarks', 'UpdatesController@ajaxBookmarksUpdates');
 
+	// Downloads Files
+	Route::get('download/file/{id}','UserController@downloadFile');
+
+	// Downloads Files
+	Route::get('download/message/file/{id}','MessagesController@downloadFileZip');
+
+	// My Wallet
+ 	Route::get('my/wallet', 'AddFundsController@wallet');
+
+	// Add Funds
+	Route::post('add/funds', 'AddFundsController@send');
+
+	// Send Tips
+	Route::post('send/tip', 'TipController@send');
+
  });//<------ End User Views LOGGED
 
 
@@ -213,7 +259,7 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
 
 	// Profile User
  Route::get('{slug}', 'UserController@profile')->where('slug','[A-Za-z0-9\_-]+')->name('profile');
- Route::get('{slug}/{media}', 'UserController@profile')->where('media', '(photos|videos|audio)$')->name('profile');
+ Route::get('{slug}/{media}', 'UserController@profile')->where('media', '(photos|videos|audio|files)$')->name('profile');
 
  // Profile User
  Route::get('{slug}/post/{id}', 'UserController@postDetail')->where('slug','[A-Za-z0-9\_-]+')->name('profile');
@@ -383,6 +429,15 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
   Route::get('panel/admin/blog/{id}','AdminController@editBlog');
 	Route::post('panel/admin/blog/update','AdminController@updateBlog');
 
+	// Resend confirmation email
+	Route::get('panel/admin/resend/email/{id}','AdminController@resendConfirmationEmail');
+
+	// Deposits
+	Route::get('panel/admin/deposits','AdminController@deposits');
+	Route::get('panel/admin/deposits/{id}','AdminController@depositsView');
+	Route::post('approve/deposits','AdminController@approveDeposits');
+	Route::post('delete/deposits','AdminController@deleteDeposits');
+
  });
  //==== End Panel Admin
 
@@ -400,7 +455,11 @@ Route::get('verify/account/{confirmation_code}', 'HomeController@getVerifyAccoun
  Route::get('payment/stripe', 'StripeController@show')->name('stripe');
  Route::post('payment/stripe/charge', 'StripeController@charge');
 
-Route::get('files/preview/{path}', 'UpdatesController@image')->where('path', '.*');
+// Files Images Post
+Route::get('files/storage/{id}/{path}', 'UpdatesController@image')->where(['id' =>'[0-9]+', 'path' => '.*']);
+
+// Files Images Messages
+Route::get('files/messages/{id}/{path}', 'UpdatesController@messagesImage')->where(['id' =>'[0-9]+', 'path' => '.*']);
 
 Route::get('lang/{id}', function($id) {
 
@@ -421,3 +480,9 @@ Route::get('sitemaps.xml', function() {
 Route::get('public/admin/js/charts.js', function() {
  return response()->view('admin.charts')->header('Content-Type', 'application/javascript');
 })->middleware('role');
+
+// Search Creators
+Route::get('search/creators', 'HomeController@searchCreator');
+
+// Explore Creators refresh
+Route::post('refresh/creators', 'HomeController@refreshCreators');

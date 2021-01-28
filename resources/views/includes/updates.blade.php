@@ -15,13 +15,15 @@
 				<h5 class="mb-0 font-montserrat">
 					<a href="{{url($response->user()->username)}}">
 					{{$response->user()->name}}
-				</a> <small class="text-muted">{{'@'.$response->user()->username}}</small>
+				</a>
 
 				@if($response->user()->verified_id == 'yes')
 					<small class="verified" title="{{trans('general.verified_account')}}"data-toggle="tooltip" data-placement="top">
-						<i class="fas fa-check-circle"></i>
+						<i class="feather icon-check-circle"></i>
 					</small>
 				@endif
+
+				<small class="text-muted">{{'@'.$response->user()->username}}</small>
 
 				@if (Auth::check() && Auth::user()->id == $response->user()->id)
 				<a href="javascript:void(0);" class="text-muted float-right" id="dropdown_options" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -60,11 +62,18 @@
 				@if(Auth::check() && Auth::user()->id != $response->user()->id && $response->locked == 'yes'
 					&& Auth::user()->userSubscriptions()
 						->where('stripe_id', '=', '')
-						->whereDate('ends_at', '>=', Carbon\Carbon::today())
-						->orWhere('stripe_status', 'active')
-						->where('stripe_plan', $response->user()->plan)
-            ->where('stripe_id', '<>', '')
-						->whereUserId(Auth::user()->id)
+							->whereDate('ends_at', '>=', Carbon\Carbon::today())
+								->where('stripe_plan', $response->user()->plan)
+
+								->orWhere('stripe_status', 'active')
+									->where('stripe_plan', $response->user()->plan)
+            				->where('stripe_id', '<>', '')
+											->whereUserId(Auth::user()->id)
+
+											->orWhere('stripe_id', '=', '')
+												->where('stripe_plan', $response->user()->plan)
+												->where('free', '=', 'yes')
+													->whereUserId(Auth::user()->id)
 						->count() != 0
 					|| Auth::check() && Auth::user()->id != $response->user()->id && Auth::user()->role == 'admin' && Auth::user()->permission == 'all'
 					|| Auth::check() && Auth::user()->id != $response->user()->id && $response->locked == 'no'
@@ -94,7 +103,7 @@
      		<div class="modal-dialog modal-danger modal-xs">
      			<div class="modal-content">
 						<div class="modal-header">
-              <h6 class="modal-title font-weight-light" id="modal-title-default"><i class="fas fa-flag"></i> {{trans('admin.report_update')}}</h6>
+              <h6 class="modal-title font-weight-light" id="modal-title-default"><i class="fas fa-flag mr-1"></i> {{trans('admin.report_update')}}</h6>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">×</span>
               </button>
@@ -117,7 +126,7 @@
 
 							<div class="modal-footer">
 								<button type="submit" class="btn btn-xs btn-white">{{trans('admin.report_update')}}</button>
-								<button type="button" class="btn btn-link text-white ml-auto" data-dismiss="modal">{{trans('admin.cancel')}}</button>
+								<button type="button" class="btn e-none text-white ml-auto" data-dismiss="modal">{{trans('admin.cancel')}}</button>
 							</div>
 							</form>
      				</div><!-- Modal content -->
@@ -128,7 +137,7 @@
 
 				<small class="timeAgo text-muted" data="{{date('c', strtotime($response->date))}}"></small>
 			@if ($response->locked == 'yes')
-				<small class="text-muted" title="{{trans('users.content_locked')}}"><i class="fa fa-lock"></i></small>
+				<small class="text-muted" title="{{trans('users.content_locked')}}"><i class="feather icon-lock"></i></small>
 			@endif
 		</div><!-- media body -->
 	</div><!-- media -->
@@ -138,20 +147,29 @@
 	|| $response->locked == 'yes' && $response->image != ''
 	|| $response->locked == 'yes' && $response->video != ''
 	|| $response->locked == 'yes' && $response->music != ''
+	|| $response->locked == 'yes' && $response->file != ''
+	|| $response->locked == 'yes' && $response->video_embed != ''
 	|| Auth::check() && $response->locked == 'yes'
 	&& Auth::user()->userSubscriptions()
 		->where('stripe_id', '=', '')
 		->whereDate('ends_at', '>=', Carbon\Carbon::today())
+			->where('stripe_plan', $response->user()->plan)
+
 			->orWhere('stripe_status', 'active')
 				->where('stripe_plan', $response->user()->plan)
 				->where('stripe_id', '<>', '')
 					->whereUserId(Auth::user()->id)
+
+					->orWhere('stripe_id', '=', '')
+						->where('stripe_plan', $response->user()->plan)
+						->where('free', '=', 'yes')
+							->whereUserId(Auth::user()->id)
 						->count() != 0
 	|| Auth::check() && Auth::user()->role == 'admin' && Auth::user()->permission == 'all'
 	|| $response->locked == 'no')
 	<div class="card-body pt-0 pb-3">
 		<p class="mb-0 update-text position-relative text-word-break">
-			{!! Helper::linkText(Helper::checkText($response->description)) !!}
+			{!! Helper::linkText(Helper::checkText(str_replace($response->video_embed, '', $response->description))) !!}
 		</p>
 	</div>
 @endif
@@ -160,11 +178,18 @@
 		|| Auth::check() && $response->locked == 'yes'
 		&& Auth::user()->userSubscriptions()
 			->where('stripe_id', '=', '')
-			->whereDate('ends_at', '>=', Carbon\Carbon::today())
-			->orWhere('stripe_status', 'active')
-			->where('stripe_plan', $response->user()->plan)
-			->where('stripe_id', '<>', '')
-			->whereUserId(Auth::user()->id)
+				->whereDate('ends_at', '>=', Carbon\Carbon::today())
+					->where('stripe_plan', $response->user()->plan)
+
+						->orWhere('stripe_status', 'active')
+							->where('stripe_plan', $response->user()->plan)
+								->where('stripe_id', '<>', '')
+									->whereUserId(Auth::user()->id)
+
+									->orWhere('stripe_id', '=', '')
+										->where('stripe_plan', $response->user()->plan)
+										->where('free', '=', 'yes')
+											->whereUserId(Auth::user()->id)
 			->count() != 0
 		|| Auth::check() && Auth::user()->role == 'admin' && Auth::user()->permission == 'all'
 		|| $response->locked == 'no'
@@ -175,14 +200,15 @@
 		@if($response->image != '')
 
 			@php
+
 			if ($response->img_type == 'gif') {
 				$urlImg =  Storage::url(config('path.images').$response->image);
 			} else {
-				$urlImg =  url("files/preview", $response->image);
+				$urlImg =  url("files/storage", $response->id).'/'.$response->image;
 			}
 			@endphp
-			<a href="{{ Storage::url(config('path.images').$response->image) }}" data-group="gallery{{$response->id}}" class="js-smartPhoto w-100">
-				<img src="{{url('files/preview', $response->image)}}?w=100&h=100" data-src="{{$urlImg}}?w=650&h=650" class="img-fluid lazyload d-inline-block w-100" alt="{{ e($response->description) }}">
+			<a href="{{ $urlImg }}" data-group="gallery{{$response->id}}" class="js-smartPhoto w-100">
+				<img src="{{$urlImg}}?w=100&h=100" data-src="{{$urlImg}}?w=650&h=650" class="img-fluid lazyload d-inline-block w-100" alt="{{ e($response->description) }}">
 			</a>
 			@endif
 
@@ -192,7 +218,7 @@
 		</video>
 	@endif
 
-	@if($response->music != '')
+	@if ($response->music != '')
 		<div class="mx-3 border rounded">
 			<audio id="music-{{$response->id}}" class="js-player w-100 @if (!request()->ajax())invisible @endif" controls>
 				<source src="{{ Storage::url(config('path.music').$response->music) }}" type="audio/mp3">
@@ -200,14 +226,67 @@
 			</audio>
 		</div>
 	@endif
+
+	@if ($response->file != '')
+		<a href="{{url('download/file', $response->id)}}" class="d-block text-decoration-none">
+			<div class="card mb-3 mx-3">
+			  <div class="row no-gutters">
+			    <div class="col-md-2 text-center bg-primary">
+			      <i class="far fa-file-archive m-4 text-white" style="font-size: 48px;"></i>
+			    </div>
+			    <div class="col-md-10">
+			      <div class="card-body">
+			        <h5 class="card-title text-primary text-truncate mb-0">
+								{{ $response->file_name }}.zip
+							</h5>
+			        <p class="card-text">
+								<small class="text-muted">{{ $response->file_size }}</small>
+							</p>
+			      </div>
+			    </div>
+			  </div>
+			</div>
+			</a>
+	@endif
+
+	@if ($response->video_embed != '' && in_array(Helper::videoUrl($response->video_embed), array('youtube.com','www.youtube.com','youtu.be','www.youtu.be')))
+		<div class="embed-responsive embed-responsive-16by9 mb-2">
+			<iframe class="embed-responsive-item" height="360" src="https://www.youtube.com/embed/{{ Helper::getYoutubeId($response->video_embed) }}" allowfullscreen></iframe>
+		</div>
+	@endif
+
+	@if ($response->video_embed != '' && in_array(Helper::videoUrl($response->video_embed), array('vimeo.com','player.vimeo.com')))
+		<div class="embed-responsive embed-responsive-16by9">
+			<iframe class="embed-responsive-item" src="https://player.vimeo.com/video/{{ Helper::getVimeoId($response->video_embed) }}" allowfullscreen></iframe>
+		</div>
+	@endif
+
 	</div><!-- btn-block -->
 
 @else
 
 	<div class="btn-block p-sm text-center content-locked pt-lg pb-lg">
-		<span class="btn-block text-center mb-3"><i class="fa fa-lock ico-no-result"></i></span>
-	 {{Auth::guest() ? trans('general.content_locked') : trans('general.content_locked_user_logged')}}
-	</div>
+		<span class="btn-block text-center mb-3"><i class="feather icon-lock ico-no-result border-0"></i></span>
+		<a href="javascript:void(0);" @guest data-toggle="modal" data-target="#loginFormModal" @else @if ($response->user()->free_subscription == 'yes') data-toggle="modal" data-target="#subscriptionFreeForm" @else data-toggle="modal" data-target="#subscriptionForm" @endif @endguest class="btn btn-primary">
+			{{ trans('general.content_locked_user_logged') }}
+		</a>
+		@if ($response->image != '')
+			<h6 class="btn-block mt-2 font-weight-light"><i class="feather icon-image"></i> {{ __('general.photo') }}</h6>
+		@endif
+
+		@if ($response->video != '' || $response->video_embed)
+			<h6 class="btn-block mt-2 font-weight-light"><i class="feather icon-video"></i> {{ __('general.video') }}</h6>
+		@endif
+
+		@if ($response->music != '')
+			<h6 class="btn-block mt-2 font-weight-light"><i class="feather icon-mic"></i> {{ __('general.audio') }}</h6>
+		@endif
+
+		@if ($response->file != '')
+			<h6 class="btn-block mt-2 font-weight-light"><i class="far fa-file-archive"></i> {{ __('general.file') }}</h6>
+		@endif
+
+		</div>
 	@endif
 
 <div class="card-footer bg-white border-top-0">
@@ -219,12 +298,19 @@
 			if(Auth::check() && Auth::user()->id == $response->user()->id
 			|| Auth::check() && $response->locked == 'yes' && Auth::user()
 				->userSubscriptions()
-				->where('stripe_id', '=', '')
-				->whereDate('ends_at', '>=', Carbon\Carbon::today())
-				->orWhere('stripe_status', 'active')
-				->where('stripe_plan', $response->user()->plan)
-				->where('stripe_id', '<>', '')
-				->whereUserId(Auth::user()->id)
+					->where('stripe_id', '=', '')
+						->whereDate('ends_at', '>=', Carbon\Carbon::today())
+							->where('stripe_plan', $response->user()->plan)
+
+							->orWhere('stripe_status', 'active')
+								->where('stripe_plan', $response->user()->plan)
+									->where('stripe_id', '<>', '')
+										->whereUserId(Auth::user()->id)
+
+										->orWhere('stripe_id', '=', '')
+											->where('stripe_plan', $response->user()->plan)
+											->where('free', '=', 'yes')
+												->whereUserId(Auth::user()->id)
 				->count() != 0
 			|| Auth::check() && Auth::user()->role == 'admin' && Auth::user()->permission == 'all'
 			|| Auth::check() && $response->locked == 'no') {
@@ -236,7 +322,7 @@
 			}
 			@endphp
 
-			<a href="javascript:void(0);" class="btnLike @if($likeActive)active @endif {{$buttonLike}} text-muted mr-2" @auth data-id="{{$response->id}}" @endauth>
+			<a href="javascript:void(0);" @guest data-toggle="modal" data-target="#loginFormModal" @endguest class="btnLike @if($likeActive)active @endif {{$buttonLike}} text-muted mr-2" @auth data-id="{{$response->id}}" @endauth>
 				<i class="@if($likeActive)fas @else far @endif fa-heart"></i> <small><strong class="countLikes">{{Helper::formatNumber($response->likes()->count())}}</strong></small>
 			</a>
 
@@ -244,7 +330,32 @@
 				<i class="far fa-comment"></i> <small class="font-weight-bold totalComments">{{Helper::formatNumber($response->comments()->count())}}</small>
 			</span>
 
-			<a href="javascript:void(0);" class="@if($bookmarkActive) text-primary @else text-muted @endif float-right {{$buttonBookmark}}" @auth data-id="{{$response->id}}" @endauth>
+			@auth
+				@if (auth()->user()->id != $response->user()->id
+							&& Auth::user()->userSubscriptions()
+								->where('stripe_id', '=', '')
+									->whereDate('ends_at', '>=', Carbon\Carbon::today())
+										->where('stripe_plan', $response->user()->plan)
+
+										->orWhere('stripe_status', 'active')
+											->where('stripe_plan', $response->user()->plan)
+												->where('stripe_id', '<>', '')
+													->whereUserId(Auth::user()->id)
+
+													->orWhere('stripe_id', '=', '')
+														->where('stripe_plan', $response->user()->plan)
+														->where('free', '=', 'yes')
+															->whereUserId(Auth::user()->id)
+								->count() != 0
+							|| auth()->user()->id != $response->user()->id
+							&& $response->locked == 'no')
+					<a href="javascript:void(0);" data-toggle="modal" title="{{trans('general.tip')}}" data-target="#tipForm" class="text-muted text-decoration-none" @auth data-id="{{$response->id}}" data-cover="{{Storage::url(config('path.cover').$response->user()->cover)}}" data-avatar="{{Storage::url(config('path.avatar').$response->user()->avatar)}}" data-name="{{$response->user()->name}}" data-userid="{{$response->user()->id}}" @endauth>
+						<i class="fa fa-donate"></i> <h6 class="d-inline">@lang('general.tip')</h6>
+					</a>
+				@endif
+			@endauth
+
+			<a href="javascript:void(0);" @guest data-toggle="modal" data-target="#loginFormModal" @endguest class="@if($bookmarkActive) text-primary @else text-muted @endif float-right {{$buttonBookmark}}" @auth data-id="{{$response->id}}" @endauth>
 				<i class="@if($bookmarkActive)fas @else far @endif fa-bookmark"></i>
 			</a>
 		</h4>
@@ -278,11 +389,18 @@
 	&& Auth::user()
 		->userSubscriptions()
 		->where('stripe_id', '=', '')
-		->whereDate('ends_at', '>=', Carbon\Carbon::today())
-		->orWhere('stripe_status', 'active')
-		->where('stripe_plan', $response->user()->plan)
-		->where('stripe_id', '<>', '')
-		->whereUserId(Auth::user()->id)
+			->whereDate('ends_at', '>=', Carbon\Carbon::today())
+				->where('stripe_plan', $response->user()->plan)
+
+				->orWhere('stripe_status', 'active')
+					->where('stripe_plan', $response->user()->plan)
+						->where('stripe_id', '<>', '')
+							->whereUserId(Auth::user()->id)
+
+							->orWhere('stripe_id', '=', '')
+								->where('stripe_plan', $response->user()->plan)
+								->where('free', '=', 'yes')
+									->whereUserId(Auth::user()->id)
 		->count() != 0
 	|| Auth::user()->role == 'admin'
 	&& Auth::user()->permission == 'all'
@@ -310,7 +428,6 @@
 
 			@endauth
   </div><!-- card-footer -->
-
 </div><!-- card -->
 @endforeach
 

@@ -66,6 +66,8 @@
                     <td>
                       @if ($subscription->ends_at)
                       {{Helper::formatDate($subscription->ends_at)}}
+                    @elseif ($subscription->free == 'yes')
+                      {{ __('general.free_subscription') }}
                     @else
                       {{Helper::formatDate(auth()->user()->subscription('main', $subscription->stripe_plan)->asStripeSubscription()->current_period_end, true)}}
                     @endif
@@ -74,20 +76,9 @@
                       @if ($subscription->stripe_id == ''
                         && strtotime($subscription->ends_at) >= strtotime(Carbon\Carbon::today())
                           || $subscription->stripe_id != '' && $subscription->stripe_status == 'active'
+                          || $subscription->stripe_id == '' && $subscription->free == 'yes'
                         )
                         <span class="badge badge-pill badge-success text-uppercase">{{trans('general.active')}}</span> <br>
-
-                        @if ($subscription->stripe_status == 'active' && $subscription->stripe_id != '')
-
-                        {!! Form::open([
-                          'method' => 'POST',
-                          'url' => "subscription/cancel/$subscription->stripe_id",
-                          'class' => 'd-inline formCancel'
-                        ]) !!}
-
-                        {!! Form::button(trans('admin.cancel'), ['class' => 'badge badge-pill badge-danger text-uppercase cancelBtn']) !!}
-                        {!! Form::close() !!}
-                      @endif
 
                       @elseif ($subscription->stripe_id != '' && $subscription->stripe_status == 'incomplete')
                         <span class="badge badge-pill badge-warning text-uppercase">{{trans('general.incomplete')}}</span> <br>

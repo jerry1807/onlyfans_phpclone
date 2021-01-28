@@ -166,14 +166,14 @@
                       	<div class="radio">
                         <label class="padding-zero">
                           <input type="radio" name="registration_active" @if( $settings->registration_active == '1' ) checked="checked" @endif value="1" checked>
-                          On
+                          {{ trans('general.yes') }}
                         </label>
                       </div>
 
                       <div class="radio">
                         <label class="padding-zero">
                           <input type="radio" name="registration_active" @if( $settings->registration_active == '0' ) checked="checked" @endif value="0">
-                          Off
+                          {{ trans('general.no') }}
                         </label>
                       </div>
                       </div>
@@ -212,14 +212,14 @@
                         <div class="radio">
                           <label class="padding-zero">
                             <input type="radio" name="show_counter" @if ($settings->show_counter == 'on') checked="checked" @endif value="on">
-                            On
+                            {{ trans('general.yes') }}
                           </label>
                         </div>
 
                       	<div class="radio">
                         <label class="padding-zero">
                           <input type="radio" name="show_counter" @if ($settings->show_counter == 'off') checked="checked" @endif value="off">
-                          Off
+                          {{ trans('general.no') }}
                         </label>
                       </div>
                       </div>
@@ -235,14 +235,106 @@
                         <div class="radio">
                           <label class="padding-zero">
                             <input type="radio" name="widget_creators_featured" @if ($settings->widget_creators_featured == 'on') checked="checked" @endif value="on">
-                            On
+                            {{ trans('general.yes') }}
                           </label>
                         </div>
 
                       	<div class="radio">
                         <label class="padding-zero">
                           <input type="radio" name="widget_creators_featured" @if ($settings->widget_creators_featured == 'off') checked="checked" @endif value="off">
-                          Off
+                          {{ trans('general.no') }}
+                        </label>
+                      </div>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('general.show_earnings_simulator') }}</label>
+                      <div class="col-sm-10">
+
+                      	<div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="earnings_simulator" @if( $settings->earnings_simulator == 'on' ) checked="checked" @endif value="on" checked>
+                          {{ trans('general.yes') }}
+                        </label>
+                      </div>
+
+                      <div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="earnings_simulator" @if( $settings->earnings_simulator == 'off' ) checked="checked" @endif value="off">
+                          {{ trans('general.no') }}
+                        </label>
+                      </div>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('general.receive_verification_requests') }}</label>
+                      <div class="col-sm-10">
+
+                      	<div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="requests_verify_account" @if( $settings->requests_verify_account == 'on' ) checked="checked" @endif value="on" checked>
+                          {{ trans('general.yes') }}
+                        </label>
+                      </div>
+
+                      <div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="requests_verify_account" @if( $settings->requests_verify_account == 'off' ) checked="checked" @endif value="off">
+                          {{ trans('general.no') }}
+                        </label>
+                      </div>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('general.hide_admin_profile') }}</label>
+                      <div class="col-sm-10">
+
+                      	<div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="hide_admin_profile" @if( $settings->hide_admin_profile == 'on' ) checked="checked" @endif value="on" checked>
+                          {{ trans('general.yes') }}
+                        </label>
+                      </div>
+
+                      <div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="hide_admin_profile" @if( $settings->hide_admin_profile == 'off' ) checked="checked" @endif value="off">
+                          {{ trans('general.no') }}
+                        </label>
+                      </div>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('general.watermark_on_images') }}</label>
+                      <div class="col-sm-10">
+
+                      	<div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="watermark" @if( $settings->watermark == 'on' ) checked="checked" @endif value="on" checked>
+                          {{ trans('general.yes') }}
+                        </label>
+                      </div>
+
+                      <div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" name="watermark" @if( $settings->watermark == 'off' ) checked="checked" @endif value="off">
+                          {{ trans('general.no') }}
                         </label>
                       </div>
                       </div>

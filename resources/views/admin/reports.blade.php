@@ -72,6 +72,16 @@
                       		}
                           else if( $report->reason == 'spoofing' ) {
 								$reason = trans('admin.spoofing');
+                        }
+
+                        else if( $report->reason == 'spam' ) {
+              $reason = trans('general.spam');
+                        }
+                      else if( $report->reason == 'fraud' ) {
+              $reason = trans('general.fraud');
+                        }
+                    else if( $report->reason == 'under_age' ) {
+              $reason = trans('general.under_age');
                       		}
 
                       	?>

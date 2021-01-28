@@ -56,6 +56,27 @@
 
 					@include('errors.errors-forms')
 
+          <!-- Start Box Body -->
+          <div class="box-body">
+            <div class="form-group">
+              <label class="col-sm-2 control-label">{{ trans('general.home_style') }}</label>
+              <div class="col-sm-10">
+                <div class="radio">
+                <label class="padding-zero">
+                  <input type="radio" value="0" name="home_style" @if ($settings->home_style == 0) checked="checked" @endif checked>
+                  <img src="{{url('/public/img/homepage-1.jpg')}}">
+                </label>
+              </div>
+              <div class="radio">
+                <label class="padding-zero">
+                  <input type="radio" value="1" name="home_style" @if ($settings->home_style == 1) checked="checked" @endif>
+                  <img src="{{url('/public/img/homepage-2.jpg')}}">
+                </label>
+              </div>
+              </div>
+            </div>
+          </div><!-- /.box-body -->
+
 
                   <!-- Start Box Body -->
                   <div class="box-body">
@@ -326,10 +347,10 @@
 
                         <div class="col-sm-2">
                         <div class="input-group my-colorpicker2">
-                          <div class="input-group-addon color-picker">
-                            <i class="color-picker-tiny"></i>
+                          <div class="input-group-addon">
+                            <i></i>
                           </div>
-                          <input type="text" readonly="readonly" name="color" value="{{$settings->color_default}}" class="form-control d-none">
+                          <input type="text" name="color" value="{{$settings->color_default}}" class="form-control">
                         </div>
                         <!-- /.input group -->
                       </div>
@@ -337,9 +358,105 @@
                       <!-- /.form group -->
                   </div><!-- /.box-body -->
 
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <!-- Color Picker -->
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label">@lang('general.navbar_background_color'):</label>
+
+                        <div class="col-sm-2">
+                        <div class="input-group my-colorpicker2">
+                          <div class="input-group-addon">
+                            <i></i>
+                          </div>
+                          <input type="text" name="navbar_background_color" value="{{$settings->navbar_background_color}}" class="form-control">
+                        </div>
+                        <!-- /.input group -->
+                      </div>
+                      </div>
+                      <!-- /.form group -->
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <!-- Color Picker -->
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label">@lang('general.navbar_text_color'):</label>
+
+                        <div class="col-sm-2">
+                        <div class="input-group my-colorpicker2">
+                          <div class="input-group-addon">
+                            <i></i>
+                          </div>
+                          <input type="text" name="navbar_text_color" value="{{$settings->navbar_text_color}}" class="form-control">
+                        </div>
+                        <!-- /.input group -->
+                      </div>
+                      </div>
+                      <!-- /.form group -->
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <!-- Color Picker -->
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label">@lang('general.footer_background_color'):</label>
+
+                        <div class="col-sm-2">
+                        <div class="input-group my-colorpicker2">
+                          <div class="input-group-addon">
+                            <i></i>
+                          </div>
+                          <input type="text" name="footer_background_color" value="{{$settings->footer_background_color}}" class="form-control">
+                        </div>
+                        <!-- /.input group -->
+                      </div>
+                      </div>
+                      <!-- /.form group -->
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <!-- Color Picker -->
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label">@lang('general.footer_text_color'):</label>
+
+                        <div class="col-sm-2">
+                        <div class="input-group my-colorpicker2">
+                          <div class="input-group-addon">
+                            <i></i>
+                          </div>
+                          <input type="text" name="footer_text_color" value="{{$settings->footer_text_color}}" class="form-control">
+                        </div>
+                        <!-- /.input group -->
+                      </div>
+                      </div>
+                      <!-- /.form group -->
+                  </div><!-- /.box-body -->
+
+                  <!-- Start Box Body -->
+                  <div class="box-body">
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">{{ trans('general.button_style') }}</label>
+                      <div class="col-sm-10">
+                        <div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" value="rounded" name="button_style" @if ($settings->button_style == 'rounded') checked="checked" @endif checked>
+                          {{ trans('general.button_style_rounded') }}
+                        </label>
+                      </div>
+                      <div class="radio">
+                        <label class="padding-zero">
+                          <input type="radio" value="normal" name="button_style" @if ($settings->button_style == 'normal') checked="checked" @endif>
+                          {{ trans('admin.normal') }}
+                        </label>
+                      </div>
+                      </div>
+                    </div>
+                  </div><!-- /.box-body -->
+
                   <hr>
                   <div class="box-footer">
-                    <a href="{{{ url('panel/admin/categories') }}}" class="btn btn-default">{{{ trans('admin.cancel') }}}</a>
                     <button type="submit" class="btn btn-success pull-right">{{{ trans('admin.save') }}}</button>
                   </div><!-- /.box-footer -->
                 </form>

@@ -72,6 +72,7 @@
                       <th class="active">{{ trans('auth.full_name') }}</th>
                       <th class="active">{{ trans('auth.email') }}</th>
                       <th class="active">{{ trans('general.balance') }}</th>
+                      <th class="active">{{ trans('general.wallet') }}</th>
                       <th class="active">{{ trans('general.posts') }}</th>
                       <th class="active">{{ trans('admin.date') }}</th>
                       <th class="active">IP</th>
@@ -91,6 +92,7 @@
                       </td>
                       <td>{{ $user->email }}</td>
                       <td>{{ Helper::amountFormatDecimal($user->balance) }}</td>
+                      <td>{{ Helper::amountFormatDecimal($user->wallet) }}</td>
                       <td>{{ $user->updates()->count() }}</td>
                       <td>{{ Helper::formatDate($user->date) }}</td>
                       <td>{{ $user->ip ? $user->ip : trans('general.no_available') }}</td>
